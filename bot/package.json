@@ -1,0 +1,48 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node build/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "babel-watch --inspect=0.0.0.0:9229 --extensions .ts -- ./src/app/index.ts"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@koa/cors": "^5.0.0",
+    "ajv": "^8.17.1",
+    "bcryptjs": "^2.4.3",
+    "config": "^3.3.12",
+    "jsonwebtoken": "^9.0.2",
+    "koa": "^2.15.3",
+    "koa-bodyparser": "^4.4.1",
+    "koa-router": "^12.0.1",
+    "node-telegram-bot-api": "^0.66.0",
+    "objection": "^3.1.4",
+    "pg": "^8.12.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.24.8",
+    "@babel/core": "^7.24.9",
+    "@babel/node": "^7.24.8",
+    "@babel/preset-env": "^7.24.8",
+    "@babel/preset-typescript": "^7.24.7",
+    "@types/bcrypt": "^5.0.2",
+    "@types/config": "^3.3.4",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/koa": "^2.15.0",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa-router": "^7.4.8",
+    "@types/node-telegram-bot-api": "^0.64.7",
+    "@types/uuid": "^10.0.0",
+    "babel-plugin-add-module-exports": "^1.0.4",
+    "babel-plugin-module-resolver": "^5.0.2",
+    "babel-watch": "^7.8.1",
+    "bcrypt": "^5.1.1",
+    "typescript": "^5.5.3"
+  }
+}
