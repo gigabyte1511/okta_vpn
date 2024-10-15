@@ -3,11 +3,8 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.createTable("cards", (table) => {
-    table.increments("id").primary();
-    table.string("word").notNullable();
-    table.string("author").notNullable();
-    table.jsonb("content").notNullable();
+  return knex.schema.createTable("users", (table) => {
+    table.bigInteger("id").primary();
     table.timestamp("created_at").defaultTo(knex.fn.now());
   });
 };
@@ -17,5 +14,5 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.dropTable("cards");
+  return knex.schema.dropTable("users");
 };

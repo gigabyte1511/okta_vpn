@@ -1,7 +1,7 @@
 version: "3"
 services:
   bot:
-    container_name: bot_api
+    container_name: bot
     # image: api_image
     build:
       context: ./bot
@@ -28,14 +28,14 @@ services:
         condition: service_healthy
 
   postgres:
-    container_name: bot_postgres
+    container_name: postgres
     environment:
       POSTGRES_PASSWORD: "${PG_PASSWD:-db_pass}"
       POSTGRES_USER: "${PG_USER:-db_user}"
-      POSTGRES_DB: "${PG_DATABASE:-db_test}"
+      POSTGRES_DB: "${PG_DATABASE:-db_common}"
     image: mdillon/postgis:11
     healthcheck:
-      test: "psql -c 'SELECT 1' db_test db_user"
+      test: "psql -c 'SELECT 1' db_common db_user"
       interval: 5s
       timeout: 10s
       retries: 3
