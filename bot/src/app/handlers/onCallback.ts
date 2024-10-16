@@ -4,131 +4,109 @@ import { bot, botConfig } from "..";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
 import { createUser, getUser } from "./controllers/userController";
-import {
-  createVpnConfig,
-  getVpnConfig,
-} from "./controllers/vpnConfigController";
+import { getVpnConfig } from "./controllers/vpnConfigController";
 import { generateConfigFile } from "../utils";
 
-export async function handleOnCallback(
-  callbackQuery: TelegramBot.CallbackQuery
-) {
-  const data = callbackQuery.data;
-  const message = callbackQuery.message;
-  if (data && message && callbackQuery.from) {
-    const chatId = message.chat.id;
-    const messageId = message.message_id;
+export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery) {
+	const data = callbackQuery.data;
+	const message = callbackQuery.message;
 
-    if (data === `${Callback.SUBSCRIPTION_LIST}`) {
-      bot.answerCallbackQuery(callbackQuery.id, {
-        //   text: "Info has been sent!",
-        show_alert: false,
-      });
+	if (data && message && callbackQuery.from) {
+		const chatId = message.chat.id;
+		const messageId = message.message_id;
 
-      bot.editMessageText("Select subscription:", {
-        chat_id: chatId,
-        message_id: messageId,
-        reply_markup: renderSubscriptionsList(),
-      });
-    }
-    if (data.includes(`${Callback.SUBSCRIPTION_SELECTED}`)) {
-      bot.answerCallbackQuery(callbackQuery.id, {
-        show_alert: false,
-      });
+		//если вызов колбека по списку подписки
+		if (data === `${Callback.SUBSCRIPTION_LIST}`) {
+			bot.answerCallbackQuery(callbackQuery.id, { // эта хуйня нужна, чтобы пользователь понял, что взаимодействие с элементом прошло успешно
+				show_alert: false,
+			});
 
-      const [_callback, value] = data.split("/") as [
-        string,
-        SubscriptionOption
-      ];
+			bot.editMessageText("Выберите подписку:", {
+				chat_id: chatId,
+				message_id: messageId,
+				reply_markup: renderSubscriptionsList(),
+			});
+		}
 
-      bot.answerCallbackQuery(callbackQuery.id, {
-        show_alert: false,
-      });
+		//если коллбек по выбору подписки
+		if (data.includes(`${Callback.SUBSCRIPTION_SELECTED}`)) {
+			bot.answerCallbackQuery(callbackQuery.id, {
+				show_alert: false,
+			});
 
-      bot.editMessageText(
-        `Selected ${value} month subscription. Prepare to pay`,
-        {
-          chat_id: chatId,
-          message_id: messageId,
-          reply_markup: renderSelectedSubscription(value),
-        }
-      );
-    }
-    if (data.includes(`${Callback.PAYMENT}`)) {
-      bot.answerCallbackQuery(callbackQuery.id, {
-        show_alert: false,
-      });
+			const [_callback, value] = data.split("/") as [
+				string,
+				SubscriptionOption
+			];
 
-      const [_callback, value] = data.split("/") as [
-        string,
-        SubscriptionOption
-      ];
+			bot.answerCallbackQuery(callbackQuery.id, {
+				show_alert: false,
+			});
 
-      let user = await getUser(callbackQuery.from.id);
-      if (!user) {
-        user = await createUser(callbackQuery.from.id);
-      }
-      // const validUntilDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-      console.log("---value---", value);
+			bot.editMessageText(
+				`Выбрана подписка на ${value} месяц(ев). Следуйте инструкциям для оплаты`,
+				{
+					chat_id: chatId,
+					message_id: messageId,
+					reply_markup: renderSelectedSubscription(value),
+				}
+			);
+		}
 
-      console.log("---Number(value)---", Number(value));
+		//отправляем чек на оплату
+		if (data.includes(`${Callback.PAYMENT}`)) {
+			bot.answerCallbackQuery(callbackQuery.id, {
+				show_alert: false,
+			});
 
-      const validUntilDate = new Date();
-      validUntilDate.setMonth(validUntilDate.getMonth() + Number(value));
+			const [_callback, value] = data.split("/") as [
+				string,
+				SubscriptionOption
+			];
 
-      const config = await createVpnConfig(
-        callbackQuery.from?.id,
-        validUntilDate
-      );
+			bot.sendInvoice(
+				chatId,
+				`OKTA VPN`,                 // Название товара
+				`Получение конфигурации VPN на ${value} месяц(ев)`,        // Описание
+				`${value}`,        // Полезная нагрузка (payload), которая будет передана при успешной оплате
+				botConfig.paymentURL,            // Токен провайдера платежей
+				"RUB",                    // Валюта (например, RUB)
+				[                         // Массив цен (в копейках)
+					{ label: `OKTA VPN`, amount: 19900 }  // Цена: 5000 копеек = 50 рублей
+				]
+			);
+		}
 
-      const configFilePath = await generateConfigFile(config);
+		//получаем конфиг
+		if (data.includes(`${Callback.GET_CONFIG}`)) {
+			bot.answerCallbackQuery(callbackQuery.id, {
+				show_alert: false,
+			});
 
-      bot.answerCallbackQuery(callbackQuery.id, {
-        show_alert: false,
-      });
+			const [_callback, configId] = data.split("/") as [string, string];
 
-      bot.editMessageText(
-        `Payment has been recieved! Your new VPN config will be available until ${validUntilDate}`
-      );
-      bot.sendDocument(
-        chatId,
-        configFilePath,
-        {},
-        {
-          filename: "vpn_config.conf",
-          contentType: "application/octet-stream", // MIME тип файла
-        }
-      );
-    }
-    if (data.includes(`${Callback.GET_CONFIG}`)) {
-      bot.answerCallbackQuery(callbackQuery.id, {
-        show_alert: false,
-      });
+			let user = await getUser(callbackQuery.from.id);
+			if (!user) {
+				user = await createUser(callbackQuery.from.id);
+			}
 
-      const [_callback, configId] = data.split("/") as [string, string];
+			const config = await getVpnConfig(callbackQuery.from?.id);
+			if (config) {
+				const configFilePath = await generateConfigFile(config);
 
-      let user = await getUser(callbackQuery.from.id);
-      if (!user) {
-        user = await createUser(callbackQuery.from.id);
-      }
-
-      const config = await getVpnConfig(callbackQuery.from?.id);
-      if (config) {
-        const configFilePath = await generateConfigFile(config);
-
-        bot.answerCallbackQuery(callbackQuery.id, {
-          show_alert: false,
-        });
-        bot.sendDocument(
-          chatId,
-          configFilePath,
-          {},
-          {
-            filename: "vpn_config.conf",
-            contentType: "application/octet-stream", // MIME тип файла
-          }
-        );
-      }
-    }
-  }
+				bot.answerCallbackQuery(callbackQuery.id, {
+					show_alert: false,
+				});
+				bot.sendDocument(
+					chatId,
+					configFilePath,
+					{},
+					{
+						filename: "vpn_config.conf",
+						contentType: "application/octet-stream", // MIME тип файла
+					}
+				);
+			}
+		}
+	}
 }

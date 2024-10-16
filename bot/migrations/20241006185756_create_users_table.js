@@ -3,10 +3,10 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
-  return knex.schema.createTable("users", (table) => {
-    table.bigInteger("id").primary();
-    table.timestamp("created_at").defaultTo(knex.fn.now());
-  });
+    return knex.schema.createTable("users", (table) => {
+        table.bigInteger("id").primary();
+        table.timestamp("created_at").defaultTo(knex.fn.now());
+    });
 };
 
 /**
@@ -14,5 +14,5 @@ exports.up = function (knex) {
  * @returns { Promise<void> }
  */
 exports.down = function (knex) {
-  return knex.schema.dropTable("users");
+    return knex.schema.dropTable("users");
 };

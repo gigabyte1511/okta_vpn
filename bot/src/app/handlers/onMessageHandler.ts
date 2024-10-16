@@ -6,75 +6,80 @@ import { renderUserConfigsList } from "../renders/userConfigsList";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 
 export enum NavMessage {
-  PROFILE = "Profile",
-  SUPPORT = "Support",
-  USERCONFIGS = "My configs",
-  BUYCONFIG = "Buy config",
+    PROFILE = "Профиль",
+    SUPPORT = "Поддержка",
+    USERCONFIGS = "Мои конфиги",
+    BUYCONFIG = "Купить",
 }
 
 export function hadleOnMesssage(msg: TelegramBot.Message) {
-  handleNavMessage(msg);
-  // There will be more messge types
+    handleNavMessage(msg);
+    // There will be more messge types
 }
 
+//в зависимости от типа сообщения отдаем в рендер определенный набор
 function handleNavMessage(msg: TelegramBot.Message) {
-  const text = msg.text || "";
-  if (text === NavMessage.SUPPORT) {
-    handleNavSupportMsg(msg);
-  } else if (text === NavMessage.USERCONFIGS) {
-    handleNavMyConfigsMsg(msg);
-  } else if (text === NavMessage.BUYCONFIG) {
-    handlBuyConfigMsg(msg);
-  }
+    const text = msg.text || "";
+    if (text === NavMessage.SUPPORT) {
+        handleNavSupportMsg(msg);
+    } else if (text === NavMessage.USERCONFIGS) {
+        handleNavMyConfigsMsg(msg);
+    } else if (text === NavMessage.BUYCONFIG) {
+        handlBuyConfigMsg(msg);
+    }
 }
 
+// выбор подписки
 function handlBuyConfigMsg(msg: TelegramBot.Message) {
-  const chatId = msg.chat.id;
-  console.log("handleNavMyConfigsMsg");
+    const chatId = msg.chat.id;
+    console.log("handleNavMyConfigsMsg");
 
-  if (msg.from) {
-    const keyboard = {
-      reply_markup: renderSubscriptionsList(),
-    };
-    bot.sendMessage(chatId, "Select subscription:", keyboard);
-  }
+    if (msg.from) {
+        const keyboard = {
+            reply_markup: renderSubscriptionsList(),
+        };
+        bot.sendMessage(chatId, "Выберите подписку:", keyboard);
+    }
 }
 
+//обратиться в поддержку
 function handleNavSupportMsg(msg: TelegramBot.Message) {
-  const chatId = msg.chat.id;
-  const keyboard = {
-    reply_markup: {
-      inline_keyboard: [[{ text: "Get Support", url: botConfig.supportURL }]],
-    },
-  };
+    const chatId = msg.chat.id;
+    const keyboard = {
+        reply_markup: {
+            inline_keyboard: [[{ text: "Поддержка", url: botConfig.supportURL }]],
+        },
+    };
 
-  bot.sendMessage(chatId, "Push here to get support:", keyboard);
+    bot.sendMessage(chatId, "Пишите сюда для помощи:", keyboard);
 }
+
+//рендер списка сообщений
 async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
-  const chatId = msg.chat.id;
-  console.log("handleNavMyConfigsMsg");
+    const chatId = msg.chat.id;
+    console.log("handleNavMyConfigsMsg");
 
-  if (msg.from) {
-    const userWithConfigs = await User.query()
-      .findById(msg.from.id)
-      .withGraphFetched("vpnConfigs");
-    console.log("---msg.from---", msg.from);
+    if (msg.from) {
+        const userWithConfigs = await User.query()
+            .findById(msg.from.id)
+            .withGraphFetched("vpnConfigs");
+        console.log("---msg.from---", msg.from);
 
-    console.log("---userWithConfigs---", userWithConfigs);
-    if (!userWithConfigs) {
-      bot.sendMessage(chatId, "There will be your configs", renderBuyVPN());
-      return;
+        console.log("---userWithConfigs---", userWithConfigs);
+        if (!userWithConfigs) {
+            bot.sendMessage(chatId, "Здесь будут ваши VPN", renderBuyVPN());
+            return;
+        }
+
+        const vpnConfigs = userWithConfigs.vpnConfigs;
+        if (!vpnConfigs) {
+            bot.sendMessage(chatId, "У вас нет активных VPN", renderBuyVPN());
+            return;
+        }
+        bot.sendMessage(
+            chatId,
+            "Ваш лист VPN:",
+            renderUserConfigsList(vpnConfigs)
+        );
     }
-
-    const vpnConfigs = userWithConfigs.vpnConfigs;
-    if (!vpnConfigs) {
-      bot.sendMessage(chatId, "You don't have active configs", renderBuyVPN());
-      return;
-    }
-    bot.sendMessage(
-      chatId,
-      "Your configs list:",
-      renderUserConfigsList(vpnConfigs)
-    );
-  }
 }
