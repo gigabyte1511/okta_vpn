@@ -1,15 +1,14 @@
 import TelegramBot from "node-telegram-bot-api";
 import { NavMessage } from "./onMessageHandler";
 import { bot } from "..";
+import logger from "../logs/logger";
 
-export function handleOnStart(msg: TelegramBot.Message) {
+export function handleOnStart(msg: TelegramBot.Message) {  
+    logger.info(`User ${msg.from?.id} started interaction`);
     const chatId = msg.chat.id;
-
     const keyboard = {
         reply_markup: {
             keyboard: [
-                // [{ text: NavMessage.PROFILE }, { text: NavMessage.SUPPORT }],
-                // [{ text: NavMessage.USERCONFIGS }],
                 [{ text: NavMessage.BUYCONFIG }],
                 [{ text: NavMessage.USERCONFIGS }, { text: NavMessage.SUPPORT }],
             ],

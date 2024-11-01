@@ -15,6 +15,7 @@ exports.up = function (knex) {
         table.string("config_json").notNullable();
         table.date("valid_until_date").notNullable();
         table.timestamp("created_at").defaultTo(knex.fn.now());
+        table.string("transaction_id").notNullable();
     });
 };
 

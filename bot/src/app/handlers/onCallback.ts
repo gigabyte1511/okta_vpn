@@ -3,9 +3,12 @@ import { Callback, SubscriptionOption } from "../types";
 import { bot, botConfig } from "..";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
-import { createUser, getUser } from "./controllers/userController";
+import { findOrCreateUser } from "./controllers/userController";
+import { getLastTransactionInformation } from "./controllers/transactionController";
 import { getVpnConfig } from "./controllers/vpnConfigController";
-import { generateConfigFile } from "../utils";
+import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
+import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
+import Cryptomus from "./payments/cryptoPayment/cryptomus";
 
 export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery) {
 	const data = callbackQuery.data;
@@ -58,23 +61,58 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 			bot.answerCallbackQuery(callbackQuery.id, {
 				show_alert: false,
 			});
+			await findOrCreateUser(chatId);
 
-			const [_callback, value] = data.split("/") as [
+			const [_callback, subScriptionValue,paymentMethodName] = data.split("/") as [
 				string,
-				SubscriptionOption
+				SubscriptionOption,
+				string
 			];
 
-			bot.sendInvoice(
-				chatId,
-				`OKTA VPN`,                 // Название товара
-				`Получение конфигурации VPN на ${value} месяц(ев)`,        // Описание
-				`${value}`,        // Полезная нагрузка (payload), которая будет передана при успешной оплате
-				botConfig.paymentURL,            // Токен провайдера платежей
-				"RUB",                    // Валюта (например, RUB)
-				[                         // Массив цен (в копейках)
-					{ label: `OKTA VPN`, amount: 19900 }  // Цена: 5000 копеек = 50 рублей
-				]
-			);
+			const paymentMethod = botConfig.payment.find(pm => pm.name === paymentMethodName);
+			paymentMethod 
+				? sendPaymentInvoice(chatId,subScriptionValue,paymentMethod)
+				: bot.sendMessage(chatId, `Не найдены доступные методы оплаты. Пожалуйста, свяжитесь с поддержкой.`);
+		}
+
+		//получаем статус платежа
+		if (data.includes(`${Callback.GET_PAYMENT_STATUS}`)) {
+			bot.answerCallbackQuery(callbackQuery.id, {
+				show_alert: false,
+			});
+			await findOrCreateUser(chatId);
+
+			const [transactionId,transactionType,transactionValue] = await Promise.all([
+				getLastTransactionInformation(chatId,"id"),
+				getLastTransactionInformation(chatId,"type"),
+				getLastTransactionInformation(chatId,"orderValue")
+			]);
+			let transactionStatus = await getLastTransactionInformation(chatId,"state");
+
+			//если статус в процессе и крипта, то нужно сделать запрос к крипте
+			if (!transactionStatus && transactionType === "crypto"){
+				const paymentData = botConfig.payment.find(payment=>payment.type === "crypto")
+				if (paymentData?.token){
+					const cryptomus = new Cryptomus(paymentData?.token);
+					await cryptomus.checkPayment(chatId);
+				}
+				
+			}
+
+			//если успешный статус, то отправляем существующий конфиг, или создаем новый
+			if (transactionStatus && transactionValue){
+				const config = await getVpnConfig(chatId);
+				if (config && config.transaction_id === transactionId){ //если есть мэтч по транзакции и конфигу - скидываем конфиг
+					sendExistConfigToUser(chatId, 'Вот ваш конфиг по последней оплате. Если возникли вопросы - обратитесь в поддержку');
+				}
+				else {
+					sendConfigToUserAfterPayment((transactionValue as string).split('__')[0],chatId);
+				}
+			}
+			else {
+				const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения.`;
+				bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
+			}
 		}
 
 		//получаем конфиг
@@ -82,31 +120,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 			bot.answerCallbackQuery(callbackQuery.id, {
 				show_alert: false,
 			});
-
-			const [_callback, configId] = data.split("/") as [string, string];
-
-			let user = await getUser(callbackQuery.from.id);
-			if (!user) {
-				user = await createUser(callbackQuery.from.id);
-			}
-
-			const config = await getVpnConfig(callbackQuery.from?.id);
-			if (config) {
-				const configFilePath = await generateConfigFile(config);
-
-				bot.answerCallbackQuery(callbackQuery.id, {
-					show_alert: false,
-				});
-				bot.sendDocument(
-					chatId,
-					configFilePath,
-					{},
-					{
-						filename: "vpn_config.conf",
-						contentType: "application/octet-stream", // MIME тип файла
-					}
-				);
-			}
+			sendExistConfigToUser(chatId,'Ваш список конфигов:');
 		}
 	}
 }

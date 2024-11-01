@@ -4,6 +4,7 @@ import User from "../models/User";
 import { renderBuyVPN } from "../renders/buyVPN";
 import { renderUserConfigsList } from "../renders/userConfigsList";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
+import { Callback } from "../types";
 
 export enum NavMessage {
     PROFILE = "Профиль",
@@ -47,7 +48,14 @@ function handleNavSupportMsg(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
     const keyboard = {
         reply_markup: {
-            inline_keyboard: [[{ text: "Поддержка", url: botConfig.supportURL }]],
+            inline_keyboard: [
+                [
+                    { text: "Поддержка", url: botConfig.supportURL }
+                ],
+                [
+                    { text: "Узнать статус платежа", callback_data: Callback.GET_PAYMENT_STATUS}
+                ]
+            ],
         },
     };
 
@@ -57,7 +65,6 @@ function handleNavSupportMsg(msg: TelegramBot.Message) {
 //рендер списка сообщений
 async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
-    console.log("handleNavMyConfigsMsg");
 
     if (msg.from) {
         const userWithConfigs = await User.query()

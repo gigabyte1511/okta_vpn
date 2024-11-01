@@ -1,5 +1,6 @@
 bot/node_modules/
 bot/config/local.json
 bot/.vscode/
+/node_modules
 example.env
 *.DS_Store

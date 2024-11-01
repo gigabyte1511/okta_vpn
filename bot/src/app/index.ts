@@ -4,18 +4,15 @@ import config from "config";
 import { handleOnStart } from "./handlers/onStartHandler";
 import { hadleOnMesssage } from "./handlers/onMessageHandler";
 import { handleOnCallback } from "./handlers/onCallback";
-import { handleOnPaymentStart } from "./handlers/payments/onPaymentStartHandler";
-import { handleOnPaymentEnd } from "./handlers/payments/onPaymentEndHandler";
+import { handleOnPaymentStart } from "./handlers/payments/defaultPayment/onPaymentStartHandler";
+import { handleOnPaymentEnd } from "./handlers/payments/defaultPayment/onPaymentEndHandler";
+import { BotConfig } from "./types";
 
 import { Model } from "objection";
 import knex from "knex";
 const knexConfig = require("../../knexfile");
 
-interface BotConfig {
-    token: string;
-    paymentURL: string;
-    supportURL: string;
-}
+
 
 export const botConfig: BotConfig = config.get("bot");
 

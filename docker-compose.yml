@@ -1,8 +1,6 @@
-version: "3"
 services:
     bot:
         container_name: bot
-        # image: api_image
         build:
             context: ./bot
             dockerfile: Dockerfile
@@ -15,11 +13,11 @@ services:
             sh -c "
             cd /var/app/ &&
             npm install -g bunyan knex &&
+            npm install winston &&
             npm install &&
             npx knex migrate:latest &&
             npx knex seed:run &&
             npm run watch | bunyan"
-
         volumes:
             - ./bot:/var/app/:rw
             - /var/app/node_modules
