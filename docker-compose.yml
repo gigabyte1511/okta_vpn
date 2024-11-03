@@ -39,3 +39,20 @@ services:
             retries: 3
         ports:
             - "5434:5432"
+
+    vpn:
+        image: hwdsl2/ipsec-vpn-server
+        container_name: vpn
+        environment:
+            VPN_IPSEC_PSK: your_psk                     # общий секрет для IPsec
+            VPN_USER: username                           # имя пользователя VPN
+            VPN_PASSWORD: userpassword                   # пароль для пользователя VPN
+        ports:
+            - "500:500/udp"    # UDP для IKEv2
+            - "4500:4500/udp"  # UDP для NAT-T
+        # cap_add:
+        # - NET_ADMIN        # Необходимо для управления сетевыми настройками
+        # - SYS_MODULE       # Необходимо для работы с модулями ядра
+        # restart: always
+        # networks:
+        # - vpn-net
