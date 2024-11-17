@@ -1,6 +1,13 @@
 bot/node_modules/
 bot/config/local.json
 bot/.vscode/
+
+api/node_modules/
+api/config/local.json
+api/.vscode/
+
+vpn/vpn.env
+
 /node_modules
 example.env
 *.DS_Store
