@@ -1,3 +1,6 @@
+volumes:
+    ikev2-vpn-data:
+
 services:
     bot:
         container_name: bot
@@ -39,3 +42,45 @@ services:
             retries: 3
         ports:
             - "5434:5432"
+
+    vpn:
+        container_name: vpn
+        image: hwdsl2/ipsec-vpn-server
+        restart: always
+        env_file:
+            - ./vpn/vpn.env
+        ports:
+            - "500:500/udp"
+            - "4500:4500/udp"
+        privileged: true
+        hostname: ipsec-vpn-server
+        volumes:
+            - ikev2-vpn-data:/etc/ipsec.d
+            - /lib/modules:/lib/modules:ro
+
+        api:
+        container_name: api_server
+        build:
+            context: ./api
+            dockerfile: Dockerfile
+        ports:
+            - "9001:9001"
+            - "9230:9230"
+        environment:
+            NODE_ENV: development
+        command: >
+            sh -c "
+            cd /var/app/ &&
+             npm install -g bunyan &&
+            npm install winston &&
+            npm install &&
+            npm run watch | bunyan"
+        volumes:
+            - ikev2-vpn-data:/etc/ipsec.d
+            - ./api:/var/app/:rw
+            - /var/app/node_modules
+            - /var/run/docker.sock:/var/run/docker.sock
+
+        # depends_on:
+        #     postgres:
+        #         condition: service_healthy
