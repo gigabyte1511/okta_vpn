@@ -4,7 +4,7 @@ import { bot, botConfig } from "..";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
 import { findOrCreateUser } from "./controllers/userController";
-import { getLastTransactionInformation } from "./controllers/transactionController";
+import { getLastTransaction } from "./controllers/transactionController";
 import { getVpnConfig } from "./controllers/vpnConfigController";
 import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
 import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
@@ -82,40 +82,41 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 			});
 			await findOrCreateUser(chatId);
 
-			const [transactionId,transactionType,transactionValue] = await Promise.all([
-				getLastTransactionInformation(chatId,"id"),
-				getLastTransactionInformation(chatId,"type"),
-				getLastTransactionInformation(chatId,"orderValue")
-			]);
-			let transactionStatus = await getLastTransactionInformation(chatId,"state");
+			const transaction = await getLastTransaction(chatId);
+			if (transaction){
+				const { id: transactionId, type: transactionType, orderValue: transactionValue } = transaction;
+				let transactionStatus = transaction.state;
 
-			//если статус в процессе и крипта, то нужно сделать запрос к крипте
-			if (!transactionStatus && transactionType === "crypto"){
-				const paymentData = botConfig.payment.find(payment=>payment.type === "crypto")
-				if (paymentData?.token){
-					const cryptomus = new Cryptomus(paymentData?.token);
-					await cryptomus.checkPayment(chatId);
+				//если крипта, то узнаем по запросу статус платежа
+				if (transactionType === "crypto"){
+					const paymentData = botConfig.payment.find(payment=>payment.type === "crypto")
+					if (paymentData?.token){
+						const cryptomus = new Cryptomus(paymentData?.token);
+						transactionStatus = await cryptomus.checkPayment(chatId);
+					}
 				}
-				
-			}
 
-			//если успешный статус, то отправляем существующий конфиг, или создаем новый
-			if (transactionStatus && transactionValue){
-				const config = await getVpnConfig(chatId);
-				if (config && config.transaction_id === transactionId){ //если есть мэтч по транзакции и конфигу - скидываем конфиг
-					sendExistConfigToUser(chatId, 'Вот ваш конфиг по последней оплате. Если возникли вопросы - обратитесь в поддержку');
+				//если успешный статус, то отправляем существующий конфиг, или создаем новый
+				if (transactionStatus && transactionValue){
+					const config = await getVpnConfig(chatId);
+					if (config && config.transaction_id === transactionId){ //если есть мэтч по транзакции и конфигу - скидываем конфиг
+						sendExistConfigToUser(chatId, 'Вот ваш конфиг по последней оплате. Если возникли вопросы - обратитесь в поддержку');
+					}
+					else {
+						sendConfigToUserAfterPayment((transactionValue as string).split('__')[0],chatId);
+					}
 				}
 				else {
-					sendConfigToUserAfterPayment((transactionValue as string).split('__')[0],chatId);
+					const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения.`;
+					bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
 				}
-			}
+			} 
 			else {
-				const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения.`;
-				bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
+				bot.sendMessage(chatId, "Вы не совершали оплату")
 			}
 		}
 
-		//получаем конфиг
+		//колбек на получение конфига
 		if (data.includes(`${Callback.GET_CONFIG}`)) {
 			bot.answerCallbackQuery(callbackQuery.id, {
 				show_alert: false,

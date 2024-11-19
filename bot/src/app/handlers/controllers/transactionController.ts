@@ -2,11 +2,16 @@ import Transaction from "../../models/Transaction";
 import { TransactionKey } from "../../types";
 
 
-export async function getLastTransactionInformation(userId:number,type:TransactionKey){
+export async function getLastTransactionByParameter(userId:number,type:TransactionKey){
     const transaction = await Transaction.query().findOne("user_id",userId).orderBy("created_at", "desc") .first();
     if (transaction){
         return transaction[type]
     }
+}
+
+export async function getLastTransaction(userId: number) {
+    const transaction = await Transaction.query().findOne("user_id", userId).orderBy("created_at", "desc").first();
+    return transaction || null;
 }
 
 export async function createTransaction(transactionId:string, userId: number, amount: number, type:"telegram" | "crypto", orderValue:string) {

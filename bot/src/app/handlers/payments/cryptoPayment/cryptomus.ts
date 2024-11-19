@@ -1,5 +1,5 @@
 import md5 from 'md5';
-import { createTransaction,getLastTransactionInformation,updateTransaction } from '../../controllers/transactionController';
+import { createTransaction,getLastTransaction,updateTransaction } from '../../controllers/transactionController';
 import { generateOrderId } from '../common/generateOrderId';
 import { PaymentStatus } from './paymentStateTypes';
 
@@ -48,30 +48,31 @@ class Cryptomus {
 
     //проверяем состояние выплаты
     async checkPayment(chatId: number) {
-        const uuid = await getLastTransactionInformation(chatId,"id");
-        const orderId =  await getLastTransactionInformation(chatId,"orderValue");
-        if (typeof uuid === "string"){
-            const data = {
-                uuid:uuid,
-                order_id:orderId
-            }
-    
-            const response = await fetch(`${this.apiUrl}/payment/info`, {
-                method: 'POST',
-                headers: {
-                    'merchant': this.merchant,
-                    'sign': this.createSignature(data),
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-    
-            const paymentResponse = await response.json();
-            const paymentStatus = paymentResponse.result.status as PaymentStatus;
+        const transaction = await getLastTransaction(chatId);
+        if (!transaction) return false;
 
-            updateTransaction(uuid,{state:paymentStatus === PaymentStatus.Check});
-            return paymentStatus;
+        const {id: uuid, orderValue: orderId} = transaction;
+        const data = {
+            uuid:uuid,
+            order_id:orderId
         }
+
+        const response = await fetch(`${this.apiUrl}/payment/info`, {
+            method: 'POST',
+            headers: {
+                'merchant': this.merchant,
+                'sign': this.createSignature(data),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const paymentResponse = await response.json();
+        const paymentStatus = paymentResponse.result.status as PaymentStatus;
+        const paymentStatusBoolean = paymentStatus === PaymentStatus.Check;
+
+        updateTransaction(uuid,{state: paymentStatusBoolean});
+        return paymentStatusBoolean;
     }
 }
 
