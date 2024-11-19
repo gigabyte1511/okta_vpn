@@ -38,8 +38,19 @@ export async function getClientConfig( appContext: ParameterizedContext<
         files: fileContents
       };
     } catch (error) {
+      let errorMessage = 'An unexpected error occurred.';
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
       appContext.status = 500;
-      appContext.body = { error: error.message };
+      appContext.body = {
+        details: {
+          error: error.message,
+          syscall: error.syscall,
+          path: error.path
+        },
+      };
     }
 }
 
@@ -77,9 +88,27 @@ export async function createClientConfig(
       files: fileContents,
     };
   } catch (error) {
-    console.error(error);
+    let errorMessage = 'An unexpected error occurred.';
+    let command = null;
+    let details = null;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+
+      if (error.cmd) {
+        command = error.cmd;
+      }
+      if (error.stderr) {
+        const match = error.stderr.match(/Error: (.+)/);
+        details = match ? match[1] : error.stderr;
+      }
+    }
     appContext.status = 500;
-    appContext.body = { error: error.message };
+    appContext.body = {
+      error: errorMessage,
+      command: command,
+      details: details,
+    };
   }
 }
 
@@ -87,14 +116,6 @@ export async function listClients( appContext: ParameterizedContext<
   Koa.DefaultState,
   Router.IRouterParamContext<Koa.DefaultState, object>
 >,){
-  const body = appContext.request.body as VPNConfigRequestPayload  
-  console.log(body) 
-  const clientId = body.clientId
-  if (!clientId) {
-    appContext.status = 400;
-    appContext.body = { error: 'Client name is required' };
-    return;
-  }
   try {
     const command = 'docker exec vpn ikev2.sh --listclients';    
     const { stdout } = await execPromise(command);
@@ -120,8 +141,27 @@ export async function listClients( appContext: ParameterizedContext<
         clients
       };
     } catch (error) {
+      let errorMessage = 'An unexpected error occurred.';
+      let command = null;
+      let details = null;
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+  
+        if (error.cmd) {
+          command = error.cmd;
+        }
+        if (error.stderr) {
+          const match = error.stderr.match(/Error: (.+)/);
+          details = match ? match[1] : error.stderr;
+        }
+      }
       appContext.status = 500;
-      appContext.body = { error: error.message };
+      appContext.body = {
+        error: errorMessage,
+        command: command,
+        details: details,
+      };
     }
 }
 
@@ -151,8 +191,26 @@ export async function revokeAndDeleteClient(
       message: `Client "${clientId}" has been revoked and deleted successfully.`,
     };
   } catch (error) {
-    console.error(error);
+    let errorMessage = 'An unexpected error occurred.';
+    let command = null;
+    let details = null;
+
+    if (error instanceof Error) {
+      errorMessage = error.message;
+
+      if (error.cmd) {
+        command = error.cmd;
+      }
+      if (error.stderr) {
+        const match = error.stderr.match(/Error: (.+)/);
+        details = match ? match[1] : error.stderr;
+      }
+    }
     appContext.status = 500;
-    appContext.body = { error: error.message };
+    appContext.body = {
+      error: errorMessage,
+      command: command,
+      details: details,
+    };
   }
 }
