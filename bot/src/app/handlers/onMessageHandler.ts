@@ -5,6 +5,7 @@ import { renderBuyVPN } from "../renders/buyVPN";
 import { renderUserConfigsList } from "../renders/userConfigsList";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { Callback } from "../types";
+import logger from '../logs/logger';
 
 export enum NavMessage {
     PROFILE = "Профиль",
@@ -14,7 +15,18 @@ export enum NavMessage {
 }
 
 export function hadleOnMesssage(msg: TelegramBot.Message) {
-    handleNavMessage(msg);
+    try{
+        handleNavMessage(msg);
+    }
+    catch(error) {
+        const err = error as Error;
+        logger.error(JSON.stringify({
+            message:err.message,
+            userId:msg.from,
+            timestamp:new Date().toISOString().slice(0, 19),
+            tags:["navigationError"]
+        }))
+    }
     // There will be more messge types
 }
 

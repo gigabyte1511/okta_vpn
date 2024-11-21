@@ -1,19 +1,24 @@
-import winston from 'winston';
+import Bunyan from 'bunyan';
+import bunyanLogstash from 'bunyan-logstash-tcp';
 
-const logstashTransport = new winston.transports.Http({
-    host: 'localhost',
-    port: 5044,
-    path: '/',
-    ssl: false
+const logstashStream = bunyanLogstash.createStream({
+ 	host: 'logstash', 
+	port: 5044
 });
 
-const logger = winston.createLogger({
-    level: 'info',
-    format: winston.format.json(),
-    transports: [
-        new winston.transports.File({ filename: 'combined.log' }),
-        logstashTransport,
-    ],
+// Создаем логгер с двумя потоками: stdout и Logstash
+const logger = new Bunyan({
+	name: 'bot',
+	streams: [
+		{
+			level: 'info',
+			stream: process.stdout  // Стандартный вывод в консоль
+		},
+		{
+			level: 'info',
+			stream: logstashStream  // Поток для отправки в Logstash
+		}
+	]
 });
 
 export default logger;

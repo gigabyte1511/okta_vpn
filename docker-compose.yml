@@ -2,6 +2,34 @@ volumes:
     ikev2-vpn-data:
 
 services:
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.17.3
+        environment:
+        - discovery.type=single-node
+        - ES_JAVA_OPTS=-Xms512m -Xmx512m
+        ports:
+        - "9200:9200"
+
+    kibana:
+        image: docker.elastic.co/kibana/kibana:7.17.3
+        ports:
+        - "5601:5601"
+        environment:
+        - ELASTICSEARCH_HOSTS=http://elastic:changeme@elasticsearch:9200
+
+        depends_on:
+        - elasticsearch
+
+    logstash:
+        image: docker.elastic.co/logstash/logstash:7.17.3
+        ports:
+        - "5044:5044"
+        environment:
+        - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+        volumes:
+        - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+        depends_on:
+        - elasticsearch
     bot:
         container_name: bot
         build:
@@ -16,7 +44,7 @@ services:
             sh -c "
             cd /var/app/ &&
             npm install -g bunyan knex &&
-            npm install winston &&
+            npm install bunyan bunyan-logstash-tcp &&
             npm install &&
             npx knex migrate:latest &&
             npx knex seed:run &&
@@ -58,7 +86,7 @@ services:
             - ikev2-vpn-data:/etc/ipsec.d
             - /lib/modules:/lib/modules:ro
 
-        api:
+    api:
         container_name: api_server
         build:
             context: ./api
