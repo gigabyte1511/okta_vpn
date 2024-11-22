@@ -14,6 +14,7 @@
     "dependencies": {
         "@koa/cors": "^5.0.0",
         "ajv": "^8.17.1",
+        "axios": "^1.7.7",
         "bcryptjs": "^2.4.3",
         "bunyan": "^1.8.15",
         "bunyan-logstash-tcp": "^1.0.0",

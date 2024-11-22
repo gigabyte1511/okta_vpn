@@ -59,3 +59,6 @@ export interface BotConfig {
     payment: Payment[];
     supportURL: string;
 }
+export interface ApiConfig {
+    baseURL: string;
+}
