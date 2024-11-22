@@ -16,12 +16,7 @@ export enum NavMessage {
 }
 
 export function hadleOnMesssage(msg: TelegramBot.Message) {
-    try{
-        handleNavMessage(msg);
-    }
-    catch(error) {
-        logger.logError(error,msg.from,["navigationError"]);
-    }
+    handleNavMessage(msg)
     // There will be more messge types
 }
 
@@ -83,7 +78,7 @@ async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
         }
 
         const vpnConfigs = await getVpnConfig(chatId);
-        if (!vpnConfigs) {
+        if (vpnConfigs.success === false) {
             bot.sendMessage(chatId, "У вас нет активных VPN", renderBuyVPN());
             return;
         }

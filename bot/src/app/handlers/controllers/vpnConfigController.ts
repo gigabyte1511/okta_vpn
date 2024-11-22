@@ -1,10 +1,10 @@
-import { api } from "../common/apiRequests";
+import { API } from "../../api";
 
-export async function getVpnConfig(id: number) {
-    const config = await api.getConfig(id.toString());
+export async function getVpnConfig(userId: number) {
+    const config = await API.getClientConfig({clientId:userId.toString()});
     return config;
 }
 export async function createVpnConfig(userId: number) {
-    const config = await api.createConfig(userId.toString());
+    const config = await API.createClientConfig({clientId:userId.toString()})
     return config;
 }

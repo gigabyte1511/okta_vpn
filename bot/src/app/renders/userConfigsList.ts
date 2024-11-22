@@ -5,7 +5,7 @@ export function renderUserConfigsList(configs: any) {
     const renderedConfigs = [configs].map((config) => {
         return [
             {
-                text: `${config.message}`,
+                text: `${config.success}`,
                 callback_data: `${Callback.GET_CONFIG}/${Math.random()}`,
             },
         ];

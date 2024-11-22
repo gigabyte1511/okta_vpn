@@ -8,7 +8,7 @@ import { getLastTransactionByParameter,updateTransaction } from "../controllers/
 export async function sendConfigToUserAfterPayment(month:string, chatId:number){
     const configExist = await getVpnConfig(chatId);
     
-    if (configExist === false){
+    if (configExist.success === false){
         //создаем конфиг с датой валидацией
         const validUntilDate = new Date();
         validUntilDate.setMonth(validUntilDate.getMonth() + Number(month));
@@ -16,17 +16,18 @@ export async function sendConfigToUserAfterPayment(month:string, chatId:number){
         const config = await createVpnConfig(chatId);
 
 
-        const configFilePath = await generateConfigFile(config);
+        const configFilePath = await generateConfigFile("config");
 
-        bot.sendDocument(
-            chatId,
-            configFilePath,
-            {caption: "Оплата заверешена! Конфиг и настройка..."},
-            {
-                filename: "vpn_config.conf",
-                contentType: "application/octet-stream", // MIME тип файла
-            }
-        );
+        bot.sendMessage(chatId,'Успешная оплата, вот конфиг')
+        // bot.sendDocument(
+        //     chatId,
+        //     configFilePath,
+        //     {caption: "Оплата заверешена! Конфиг и настройка..."},
+        //     {
+        //         filename: "vpn_config.conf",
+        //         contentType: "application/octet-stream", // MIME тип файла
+        //     }
+        // );
         updateTransaction(transactionId as string,{state:true});
     }
 }
@@ -37,13 +38,11 @@ export async function sendExistConfigToUser(chatId:number, message: string){
     await findOrCreateUser(chatId);
 
     const config = await getVpnConfig(chatId);
-    if (config) {
+    if (config.success === true) {
         //const configFilePath = await generateConfigFile(config);
         bot.sendMessage(chatId,message)
         return true;
     } 
-    else {
-        return false;
-    }
+    return config.success;
 }
 
