@@ -42,13 +42,7 @@ export const sendPaymentInvoice = async (
         }
     }
     catch(error){
-        const err = error as Error;
-        logger.error(JSON.stringify({
-            message:err.message,
-            userId:chatId,
-            timestamp:new Date().toISOString().slice(0, 19),
-            tags:["sendInvoiceError"]
-        }))
+        logger.logError(error,chatId,["sendInvoiceError"]);
         bot.sendMessage(chatId, 'Произошла ошибка при создании платежа.');
     }
 };

@@ -24,12 +24,6 @@ export function handleOnStart(msg: TelegramBot.Message) {
         );
     } 
     catch(error) {
-        const err = error as Error;
-        logger.error(JSON.stringify({
-            message:err.message,
-            userId:msg.from,
-            timestamp:new Date().toISOString().slice(0, 19),
-            tags:["onStartError"]
-        }))
+        logger.logError(error,msg.from,["onStartError"]);
     }
 }

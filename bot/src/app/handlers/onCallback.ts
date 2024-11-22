@@ -5,7 +5,6 @@ import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
 import { findOrCreateUser } from "./controllers/userController";
 import { getLastTransaction } from "./controllers/transactionController";
-import { getVpnConfig } from "./controllers/vpnConfigController";
 import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
 import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
 import Cryptomus from "./payments/cryptoPayment/cryptomus";
@@ -98,14 +97,14 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 						}
 					}
 
-					//если успешный статус, то отправляем существующий конфиг, или создаем новый
+					//если успешный статус, то отправляем существующий конфиг
 					if (transactionStatus && transactionValue){
-						const config = await getVpnConfig(chatId);
-						if (config && config.transaction_id === transactionId){ //если есть мэтч по транзакции и конфигу - скидываем конфиг
-							sendExistConfigToUser(chatId, 'Вот ваш конфиг по последней оплате. Если возникли вопросы - обратитесь в поддержку');
-						}
-						else {
-							sendConfigToUserAfterPayment((transactionValue as string).split('__')[0],chatId);
+						const configExist = await sendExistConfigToUser(chatId,`Вот ваш конфиг по последней оплате`);
+
+						//если транзакция есть/оплата есть, но конфига нет - отправляем новый
+						if (configExist === false){
+							const month = (transactionValue as string).split('__')[0];
+							await sendConfigToUserAfterPayment(month,chatId);
 						}
 					}
 					else {
@@ -128,12 +127,6 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 		}
 	}
 	catch(error){
-		const err = error as Error;
-        logger.error(JSON.stringify({
-            message:err.message,
-            userId:callbackQuery?.message?.from,
-            timestamp:new Date().toISOString().slice(0, 19),
-            tags:[`${callbackQuery.data}`,"callbackError"]
-        }))
+		logger.logError(error,callbackQuery?.message?.chat,[`${callbackQuery.data}`,"callbackError"]);
 	}
 }

@@ -6,6 +6,7 @@ import { renderUserConfigsList } from "../renders/userConfigsList";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { Callback } from "../types";
 import logger from '../logs/logger';
+import { getVpnConfig } from "./controllers/vpnConfigController";
 
 export enum NavMessage {
     PROFILE = "Профиль",
@@ -19,13 +20,7 @@ export function hadleOnMesssage(msg: TelegramBot.Message) {
         handleNavMessage(msg);
     }
     catch(error) {
-        const err = error as Error;
-        logger.error(JSON.stringify({
-            message:err.message,
-            userId:msg.from,
-            timestamp:new Date().toISOString().slice(0, 19),
-            tags:["navigationError"]
-        }))
+        logger.logError(error,msg.from,["navigationError"]);
     }
     // There will be more messge types
 }
@@ -45,7 +40,6 @@ function handleNavMessage(msg: TelegramBot.Message) {
 // выбор подписки
 function handlBuyConfigMsg(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
-    console.log("handleNavMyConfigsMsg");
 
     if (msg.from) {
         const keyboard = {
@@ -82,15 +76,13 @@ async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
         const userWithConfigs = await User.query()
             .findById(msg.from.id)
             .withGraphFetched("vpnConfigs");
-        console.log("---msg.from---", msg.from);
 
-        console.log("---userWithConfigs---", userWithConfigs);
         if (!userWithConfigs) {
             bot.sendMessage(chatId, "Здесь будут ваши VPN", renderBuyVPN());
             return;
         }
 
-        const vpnConfigs = userWithConfigs.vpnConfigs;
+        const vpnConfigs = await getVpnConfig(chatId);
         if (!vpnConfigs) {
             bot.sendMessage(chatId, "У вас нет активных VPN", renderBuyVPN());
             return;

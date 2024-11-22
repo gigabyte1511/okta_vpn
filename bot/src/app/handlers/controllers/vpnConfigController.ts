@@ -1,18 +1,10 @@
-import VPNConfig from "../../models/VPNConfig";
+import { api } from "../common/apiRequests";
 
 export async function getVpnConfig(id: number) {
-    const config = await VPNConfig.query().findOne("user_id",id).orderBy("created_at", "desc") .first();
+    const config = await api.getConfig(id.toString());
     return config;
 }
-export async function createVpnConfig(userId: number, validUntilDate: Date, transactionId:string) {
-    console.log("---validUntilDate---", validUntilDate);
-
-    const config: VPNConfig = await VPNConfig.query().insert({
-        user_id: userId,
-        valid_until_date: validUntilDate.toISOString(),
-        config_json: `"Data": "test123"`,
-        name: "config",
-        transaction_id:transactionId
-    });
+export async function createVpnConfig(userId: number) {
+    const config = await api.createConfig(userId.toString());
     return config;
 }
