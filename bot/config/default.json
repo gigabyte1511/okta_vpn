@@ -10,5 +10,8 @@
         "pass": "use local.json",
         "database": "use local.json",
         "port": "5432"
+    },
+    "api":{
+        "baseURL": "http://api_server:9001"
     }
 }
