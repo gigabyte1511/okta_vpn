@@ -16,6 +16,7 @@ class ExtendedLogger extends Bunyan {
 			userId: userId,
 			timestamp: new Date().toISOString().slice(0, 19),
 			tags,
+			stack: err?.stack,
 			...additionalInfo,
 		}));
 	}
@@ -35,5 +36,14 @@ const logger = new ExtendedLogger({
 		}
 	]
 });
+
+process.on('uncaughtException', (error) => {
+	logger.logError(error, null, ['uncaughtException']);
+});
+
+process.on('unhandledRejection', (reason) => {
+	logger.logError(reason, null, ['unhandledRejection']);
+});
+  
 
 export default logger;
