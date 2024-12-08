@@ -6,6 +6,10 @@ import { VPNConfigRequestPayload } from '../types';
 import path from 'path'
 import fs from 'fs/promises';
 import util from 'util';
+import Config from '../models/Config';
+import * as yup from 'yup';
+
+
 
 
 const execPromise = util.promisify(exec);
@@ -23,15 +27,20 @@ export async function getClientConfig( appContext: ParameterizedContext<
       return;
   }
   try {
-       const basePath = '/etc/ipsec.d';
-       const extensions = ['.p12', '.sswan', '.mobileconfig'];
-       const files = extensions.map(ext => path.join(basePath, `${clientId}${ext}`));
+    const config = await Config.query().findOne({ user_id: clientId });
 
-       const fileContents: Record<string, string> = {};
-       for (const filePath of files) {
-         const contentBuffer = await fs.readFile(filePath);
-         fileContents[path.basename(filePath)] = contentBuffer.toString('base64');
-       }
+    if (!config) {
+      appContext.status = 404;
+      appContext.body = { error: `Configuration for client "${clientId}" not found.` };
+      return;
+    }
+
+    // Преобразуем бинарные данные в Base64
+    const fileContents: Record<string, string> = {
+      [`${clientId}.mobileconfig`]: config.config_mobileconfig.toString("base64"),
+      [`${clientId}.p12`]: config.config_p12.toString("base64"),
+      [`${clientId}.sswan`]: config.config_sswan.toString("base64"),
+    };
   
       appContext.body = {
         message: `Client "${clientId}" exported successfully.`,
@@ -54,6 +63,11 @@ export async function getClientConfig( appContext: ParameterizedContext<
     }
 }
 
+const schema = yup.object({
+  clientId: yup.string().required('Client ID is required'),
+  validUntil: yup.date().required('ValidUntil date is required').min(new Date(), 'ValidUntil must be a future date'),
+});
+
 export async function createClientConfig(
   appContext: ParameterizedContext<
     Koa.DefaultState,
@@ -61,15 +75,22 @@ export async function createClientConfig(
   >
 ) {
   const body = appContext.request.body as VPNConfigRequestPayload;
-  const clientId = body.clientId;
+
+  const { clientId, validUntil } = body;
 
   if (!clientId) {
     appContext.status = 400;
     appContext.body = { error: 'Client name is required' };
     return;
   }
+  if (!validUntil) {
+    appContext.status = 400;
+    appContext.body = { error: 'validUntil date is required' };
+    return;
+  }
 
   try {
+    await schema.validate(body, { abortEarly: false });
     const addClientCommand = `docker exec vpn ikev2.sh --addclient ${clientId}`;
     await execPromise(addClientCommand);
 
@@ -81,6 +102,18 @@ export async function createClientConfig(
     for (const filePath of files) {
       const contentBuffer = await fs.readFile(filePath); 
       fileContents[path.basename(filePath)] = contentBuffer.toString('base64');
+    }
+
+    const config = await Config.query().insert({
+      user_id: clientId,
+      config_p12: fileContents[`${clientId}.p12`],
+      config_sswan: fileContents[`${clientId}.sswan`],
+      config_mobileconfig: fileContents[`${clientId}.mobileconfig`],
+      valid_until_date: validUntil,
+    });
+
+    for (const filePath of files) {
+      await fs.unlink(filePath); 
     }
 
     appContext.body = {
@@ -186,6 +219,8 @@ export async function revokeAndDeleteClient(
 
   const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${clientId} -y`;
   await execPromise(deleteCommand);
+
+  await Config.query().delete().where('user_id', clientId);
 
     appContext.body = {
       message: `Client "${clientId}" has been revoked and deleted successfully.`,

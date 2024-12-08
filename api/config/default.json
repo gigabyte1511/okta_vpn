@@ -1,2 +1,9 @@
 {
+    "postgres": {
+        "host": "api_postgres",
+        "user": "use local.json",
+        "pass": "use local.json",
+        "database": "use local.json",
+        "port": "use local.json"
+      }
 }
