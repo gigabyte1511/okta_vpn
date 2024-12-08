@@ -1,6 +1,12 @@
 import Koa from 'koa'
 import { vpnConfigRouter } from './routers/vpnConfigRouter'
 import bodyParser from 'koa-bodyparser'
+import { Model } from "objection";
+import knex from "knex";
+
+const knexConfig = require("../../knexfile");
+const knexInstance = knex(knexConfig.development);
+Model.knex(knexInstance);
 
 const app = new Koa()
 
