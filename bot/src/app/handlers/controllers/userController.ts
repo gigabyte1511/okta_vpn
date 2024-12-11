@@ -1,11 +1,11 @@
 import User from "../../models/User";
 
-export async function getUser(userId: number) {
-    return await User.query().findById(userId)
+export async function getUser(chatId: number) {
+    return await User.query().findById(chatId)
 }
 
-export async function createUser(userId: number) {
-    const user: User = await User.query().insert({id:userId});
+export async function createUser(chatId: number) {
+    const user: User = await User.query().insert({id:chatId});
     return user;
 }
 

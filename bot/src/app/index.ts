@@ -6,6 +6,7 @@ import { hadleOnMesssage } from "./handlers/onMessageHandler";
 import { handleOnCallback } from "./handlers/onCallback";
 import { handleOnPaymentStart } from "./handlers/payments/defaultPayment/onPaymentStartHandler";
 import { handleOnPaymentEnd } from "./handlers/payments/defaultPayment/onPaymentEndHandler";
+import { handleInvalidateConfig} from "./handlers/invalidatorHandler";
 import { BotConfig } from "./types";
 
 import { Model } from "objection";
@@ -30,5 +31,9 @@ bot.on("successful_payment", handleOnPaymentEnd);
 //бд
 const knexInstance = knex(knexConfig.development);
 Model.knex(knexInstance);
+
+//инвалидатор конфигов
+const timeUntilNextCheckMs = 5000;
+setInterval(handleInvalidateConfig,timeUntilNextCheckMs)
 
 console.log("OktaVPN bor started.");

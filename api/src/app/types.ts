@@ -1,3 +1,3 @@
 export interface VPNConfigRequestPayload{
- clientId: string
+ chatId: string
 }

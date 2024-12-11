@@ -6,7 +6,7 @@ class Transaction extends Model {
     static tableName: string = "transactions";
 
     id!: string;
-    user_id!: number;
+    chat_id!: number;
     amount?: number;
     state?: boolean;
     type?: string;
@@ -14,10 +14,10 @@ class Transaction extends Model {
 
     static jsonSchema: JSONSchema = {
         type: "object",
-        required: ["user_id"],
+        required: ["chat_id"],
         properties: {
             id: { type: "string" },
-            user_id: { type: "number" },
+            chat_id: { type: "number" },
             amount: { type: "number" },
             created_at: { type: "string", format: "date-time" },
             state: {type: "boolean"},
@@ -31,7 +31,7 @@ class Transaction extends Model {
             relation: Model.BelongsToOneRelation,
             modelClass: User,
             join: {
-                from: "transactions.user_id",
+                from: "transactions.chat_id",
                 to: "users.id",
             },
         },

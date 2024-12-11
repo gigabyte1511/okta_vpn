@@ -20,30 +20,30 @@ export async function getClientConfig( appContext: ParameterizedContext<
 >,){
   const body = appContext.request.body as VPNConfigRequestPayload  
   console.log(body) 
-  const clientId = body.clientId
-  if (!clientId) {
+  const chatId = body.chatId
+  if (!chatId) {
       appContext.status = 400;
       appContext.body = { error: 'Client name is required' };
       return;
   }
   try {
-    const config = await Config.query().findOne({ user_id: clientId });
+    const config = await Config.query().findOne({ chat_id: chatId });
 
     if (!config) {
       appContext.status = 404;
-      appContext.body = { error: `Configuration for client "${clientId}" not found.` };
+      appContext.body = { error: `Configuration for client "${chatId}" not found.` };
       return;
     }
 
     // Преобразуем бинарные данные в Base64
     const fileContents: Record<string, string> = {
-      [`${clientId}.mobileconfig`]: config.config_mobileconfig.toString("base64"),
-      [`${clientId}.p12`]: config.config_p12.toString("base64"),
-      [`${clientId}.sswan`]: config.config_sswan.toString("base64"),
+      [`${chatId}.mobileconfig`]: config.config_mobileconfig.toString("base64"),
+      [`${chatId}.p12`]: config.config_p12.toString("base64"),
+      [`${chatId}.sswan`]: config.config_sswan.toString("base64"),
     };
   
       appContext.body = {
-        message: `Client "${clientId}" exported successfully.`,
+        message: `Client "${chatId}" exported successfully.`,
         files: fileContents
       };
     } catch (error) {
@@ -64,7 +64,7 @@ export async function getClientConfig( appContext: ParameterizedContext<
 }
 
 const schema = yup.object({
-  clientId: yup.string().required('Client ID is required'),
+  chatId: yup.string().required('Client ID is required'),
   validUntil: yup.date().required('ValidUntil date is required').min(new Date(), 'ValidUntil must be a future date'),
 });
 
@@ -76,9 +76,9 @@ export async function createClientConfig(
 ) {
   const body = appContext.request.body as VPNConfigRequestPayload;
 
-  const { clientId, validUntil } = body;
+  const { chatId, validUntil } = body;
 
-  if (!clientId) {
+  if (!chatId) {
     appContext.status = 400;
     appContext.body = { error: 'Client name is required' };
     return;
@@ -91,12 +91,12 @@ export async function createClientConfig(
 
   try {
     await schema.validate(body, { abortEarly: false });
-    const addClientCommand = `docker exec vpn ikev2.sh --addclient ${clientId}`;
+    const addClientCommand = `docker exec vpn ikev2.sh --addclient ${chatId}`;
     await execPromise(addClientCommand);
 
     const basePath = '/etc/ipsec.d'; 
     const extensions = ['.p12', '.sswan', '.mobileconfig'];
-    const files = extensions.map(ext => path.join(basePath, `${clientId}${ext}`));
+    const files = extensions.map(ext => path.join(basePath, `${chatId}${ext}`));
 
     const fileContents: Record<string, string> = {};
     for (const filePath of files) {
@@ -105,10 +105,10 @@ export async function createClientConfig(
     }
 
     const config = await Config.query().insert({
-      user_id: clientId,
-      config_p12: fileContents[`${clientId}.p12`],
-      config_sswan: fileContents[`${clientId}.sswan`],
-      config_mobileconfig: fileContents[`${clientId}.mobileconfig`],
+      chat_id: chatId,
+      config_p12: fileContents[`${chatId}.p12`],
+      config_sswan: fileContents[`${chatId}.sswan`],
+      config_mobileconfig: fileContents[`${chatId}.mobileconfig`],
       valid_until_date: validUntil,
     });
 
@@ -117,7 +117,7 @@ export async function createClientConfig(
     }
 
     appContext.body = {
-      message: `Client "${clientId}" created and exported successfully.`,
+      message: `Client "${chatId}" created and exported successfully.`,
       files: fileContents,
     };
   } catch (error) {
@@ -205,25 +205,25 @@ export async function revokeAndDeleteClient(
   >
 ) {
   const body = appContext.request.body as VPNConfigRequestPayload;
-  const clientId = body.clientId;
+  const chatId = body.chatId;
 
-  if (!clientId) {
+  if (!chatId) {
     appContext.status = 400;
     appContext.body = { error: 'Client name is required' };
     return;
   }
 
   try {
-  const revokeCommand = `docker exec vpn ikev2.sh --revokeclient ${clientId} -y`;
+  const revokeCommand = `docker exec vpn ikev2.sh --revokeclient ${chatId} -y`;
   await execPromise(revokeCommand);
 
-  const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${clientId} -y`;
+  const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${chatId} -y`;
   await execPromise(deleteCommand);
 
-  await Config.query().delete().where('user_id', clientId);
+  await Config.query().delete().where('chat_id', chatId);
 
     appContext.body = {
-      message: `Client "${clientId}" has been revoked and deleted successfully.`,
+      message: `Client "${chatId}" has been revoked and deleted successfully.`,
     };
   } catch (error) {
     let errorMessage = 'An unexpected error occurred.';

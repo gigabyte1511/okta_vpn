@@ -25,7 +25,7 @@ class User extends Model {
             modelClass: VPNConfig,
             join: {
                 from: "users.id",
-                to: "vpn_configs.user_id",
+                to: "vpn_configs.chat_id",
             },
         },
         transactions: {
@@ -33,7 +33,7 @@ class User extends Model {
             modelClass: Transaction,
             join: {
                 from: "users.id",
-                to: "transactions.user_id",
+                to: "transactions.chat_id",
             },
         },
     };

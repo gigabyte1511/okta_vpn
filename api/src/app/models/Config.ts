@@ -5,7 +5,7 @@ class Config extends Model {
     static tableName: string = "configs";
 
     id!: number;
-    user_id!: string;
+    chat_id!: string;
     config_mobileconfig!: Buffer;
     config_p12!: Buffer;
     config_sswan!: Buffer;
@@ -15,7 +15,7 @@ class Config extends Model {
     static jsonSchema: JSONSchema = {
         type: "object",
         required: [
-            "user_id",
+            "chat_id",
             "config_mobileconfig",
             "config_p12",
             "config_sswan",
@@ -23,7 +23,7 @@ class Config extends Model {
         ],
         properties: {
             id: { type: "integer" },
-            user_id: { type: "string" },
+            chat_id: { type: "string" },
             config_mobileconfig: { type: "string", contentEncoding: "base64" },
             config_p12: { type: "string", contentEncoding: "base64" },
             config_sswan: { type: "string", contentEncoding: "base64" },

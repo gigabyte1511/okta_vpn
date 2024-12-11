@@ -49,21 +49,21 @@ export class API {
             `/config/list`,)
             return result
     }
-    static async getClientConfig(params:{clientId: string}) {
+    static async getClientConfig(params:{chatId: string}) {
             const result = await API.performApiRequest<{ message: string, files: Record<string, string> }>(
                 'POST',
                 `/config/get`,
                 params,        )
                 return result
     } 
-    static async createClientConfig(params:{clientId: string}) {
+    static async createClientConfig(params:{chatId: string}) {
         const result = await API.performApiRequest<{message: string, files: Record<string, string> }>(
           'POST',
           `/config/create`,
           params,          )
           return result
     } 
-    static async revokeAndDeleteClient(params:{clientId: string}) {
+    static async revokeAndDeleteClient(params:{chatId: string}) {
         const result = await API.performApiRequest<{ message: string }>(
           'POST',
           `/config/delete`, 

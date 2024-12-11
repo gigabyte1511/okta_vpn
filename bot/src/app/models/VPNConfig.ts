@@ -16,19 +16,19 @@ class VPNConfig extends Model implements IConfig {
     name!: string;
     config_json!: string;
     valid_until_date!: Date;
-    user_id!: number;
+    chat_id!: number;
     transaction_id!: string;
 
     static jsonSchema: JSONSchema = {
         type: "object",
-        required: ["config_json", "user_id", "transaction_id"], 
+        required: ["config_json", "chat_id", "transaction_id"], 
         properties: {
             id: { type: "integer" },
             name: { type: "string" },
             config_json: { type: "string" },
             valid_until_date: { type: "string", format: "date-time" },
             created_at: { type: "string", format: "date-time" },
-            user_id: { type: "number" },
+            chat_id: { type: "number" },
             transaction_id: { type: "string" },
         },
     };
@@ -38,7 +38,7 @@ class VPNConfig extends Model implements IConfig {
             relation: Model.BelongsToOneRelation,
             modelClass: User,
             join: {
-                from: "vpn_configs.user_id",
+                from: "vpn_configs.chat_id",
                 to: "users.id",
             },
         },

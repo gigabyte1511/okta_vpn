@@ -6,7 +6,7 @@ exports.up = function (knex) {
     return knex.schema.createTable("vpn_configs", (table) => {
         table.increments("id").primary();
         table
-            .bigInteger("user_id")
+            .bigInteger("chat_id")
             .unsigned()
             .references("id")
             .inTable("users")

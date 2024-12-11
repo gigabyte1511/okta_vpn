@@ -7,7 +7,7 @@ exports.up = function (knex) {
         table.string("id").primary();
         table.timestamp("created_at").defaultTo(knex.fn.now());
         table
-            .bigInteger("user_id")
+            .bigInteger("chat_id")
             .unsigned()
             .references("id")
             .inTable("users")

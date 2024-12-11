@@ -15,9 +15,10 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 		const data = callbackQuery.data;
 		const message = callbackQuery.message;
 
-		if (data && message && callbackQuery.from) {
+		if (data && message && callbackQuery.from && message.from?.id) {
 			const chatId = message.chat.id;
 			const messageId = message.message_id;
+			const userId = message.from.id;
 
 			//если вызов колбека по списку подписки
 			if (data === `${Callback.SUBSCRIPTION_LIST}`) {
@@ -104,7 +105,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 						//если транзакция есть/оплата есть, но конфига нет - отправляем новый
 						if (configExist === false){
 							const month = (transactionValue as string).split('__')[0];
-							await sendConfigToUserAfterPayment(month,chatId);
+							await sendConfigToUserAfterPayment(month,chatId,userId);
 						}
 					}
 					else {

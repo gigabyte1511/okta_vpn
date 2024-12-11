@@ -5,7 +5,7 @@
 exports.up = function (knex) {
     return knex.schema.createTable("configs", (table) => {
         table.increments("id").primary();
-        table.string("user_id").notNullable();
+        table.string("chat_id").notNullable();
         table.binary("config_mobileconfig").notNullable();
         table.binary("config_p12").notNullable();
         table.binary("config_sswan").notNullable();

@@ -2,20 +2,20 @@ import Transaction from "../../models/Transaction";
 import { TransactionKey } from "../../types";
 
 
-export async function getLastTransactionByParameter(userId:number,type:TransactionKey){
-    const transaction = await Transaction.query().findOne("user_id",userId).orderBy("created_at", "desc") .first();
+export async function getLastTransactionByParameter(chatId:number,type:TransactionKey){
+    const transaction = await Transaction.query().findOne("chat_id",chatId).orderBy("created_at", "desc") .first();
     if (transaction){
         return transaction[type]
     }
 }
 
-export async function getLastTransaction(userId: number) {
-    const transaction = await Transaction.query().findOne("user_id", userId).orderBy("created_at", "desc").first();
+export async function getLastTransaction(chatId: number) {
+    const transaction = await Transaction.query().findOne("chat_id", chatId).orderBy("created_at", "desc").first();
     return transaction || null;
 }
 
-export async function createTransaction(transactionId:string, userId: number, amount: number, type:"telegram" | "crypto", orderValue:string) {
-    const transaction: Transaction = await Transaction.query().insert({id:transactionId, user_id:userId, amount: amount,type: type, orderValue: orderValue});
+export async function createTransaction(transactionId:string, chatId: number, amount: number, type:"telegram" | "crypto", orderValue:string) {
+    const transaction: Transaction = await Transaction.query().insert({id:transactionId, chat_id:chatId, amount: amount,type: type, orderValue: orderValue});
     return transaction;
 }
 

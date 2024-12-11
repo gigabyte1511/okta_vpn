@@ -8,12 +8,12 @@ const logstashStream = bunyanLogstash.createStream({
 
 //расширяем класс под формирование ошибок
 class ExtendedLogger extends Bunyan {
-	logError(error: unknown, userId?: any, tags: string[] = [], additionalInfo: Record<string, any> = {}) {
+	logError(error: unknown, chatId?: any, tags: string[] = [], additionalInfo: Record<string, any> = {}) {
 		console.log(error)
 	  	const err = error instanceof Error ? error : new Error(String(error));
 		this.error(JSON.stringify({
 			message: err?.message,
-			userId: userId,
+			chatId: chatId,
 			timestamp: new Date().toISOString().slice(0, 19),
 			tags,
 			stack: err?.stack,

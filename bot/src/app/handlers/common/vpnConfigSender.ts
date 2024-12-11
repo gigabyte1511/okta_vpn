@@ -5,7 +5,7 @@ import { bot } from "../..";
 import { getLastTransactionByParameter,updateTransaction } from "../controllers/transactionController";
 
 //генерируем и отправляем конфиг пользователю
-export async function sendConfigToUserAfterPayment(month:string, chatId:number){
+export async function sendConfigToUserAfterPayment(month:string, chatId:number, userId: number){
     const configExist = await getVpnConfig(chatId);
     
     if (configExist.success === false){
@@ -13,7 +13,7 @@ export async function sendConfigToUserAfterPayment(month:string, chatId:number){
         const validUntilDate = new Date();
         validUntilDate.setMonth(validUntilDate.getMonth() + Number(month));
         const transactionId = await getLastTransactionByParameter(chatId,"id")
-        const config = await createVpnConfig(chatId);
+        const config = await createVpnConfig(chatId,userId);
 
 
         const configFilePath = await generateConfigFile("config");
