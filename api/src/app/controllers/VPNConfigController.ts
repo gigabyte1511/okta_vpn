@@ -198,7 +198,7 @@ export async function listClients( appContext: ParameterizedContext<
     }
 }
 
-export async function revokeAndDeleteClient(
+export async function deleteClientController(
   appContext: ParameterizedContext<
     Koa.DefaultState,
     Router.IRouterParamContext<Koa.DefaultState, object>
@@ -214,14 +214,8 @@ export async function revokeAndDeleteClient(
   }
 
   try {
-  const revokeCommand = `docker exec vpn ikev2.sh --revokeclient ${chatId} -y`;
-  await execPromise(revokeCommand);
-
-  const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${chatId} -y`;
-  await execPromise(deleteCommand);
-
-  await Config.query().delete().where('chat_id', chatId);
-
+    await revokeAndDeleteClient(chatId)
+    
     appContext.body = {
       message: `Client "${chatId}" has been revoked and deleted successfully.`,
     };
@@ -248,4 +242,25 @@ export async function revokeAndDeleteClient(
       details: details,
     };
   }
+}
+
+export async function revokeAndDeleteClient(clientId: string){
+  const revokeCommand = `docker exec vpn ikev2.sh --revokeclient ${clientId} -y`;
+  await execPromise(revokeCommand);
+
+  const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${clientId} -y`;
+  await execPromise(deleteCommand);
+}
+
+export async function deleteExiredConfigsController(appContext: ParameterizedContext<
+  Koa.DefaultState,
+  Router.IRouterParamContext<Koa.DefaultState, object>
+>){
+  const expiredConfigs = await Config.query().where('valid_until_date', '<', new Date().toISOString());
+  for (const config of expiredConfigs){
+      await revokeAndDeleteClient(config.chat_id)
+      console.log(config.chat_id)
+  }
+  await Config.query().where('valid_until_date', '<', new Date().toISOString()).delete();
+  return expiredConfigs.map((config)=> config.chat_id)
 }
