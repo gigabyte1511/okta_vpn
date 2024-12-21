@@ -33,7 +33,7 @@ const knexInstance = knex(knexConfig.development);
 Model.knex(knexInstance);
 
 //инвалидатор конфигов
-const timeUntilNextCheckMs = 5000;
+const timeUntilNextCheckMs = 20000;
 setInterval(handleInvalidateConfig,timeUntilNextCheckMs)
 
 console.log("OktaVPN bor started.");

@@ -70,4 +70,10 @@ export class API {
           params,         )
           return result
     }
+    static async deleteExiredConfigs() {
+        const result = await API.performApiRequest<{ message: string, chatIDs: string[] }>(
+          'POST',
+          `/config/expired/delete` )
+          return result
+    }
 }
