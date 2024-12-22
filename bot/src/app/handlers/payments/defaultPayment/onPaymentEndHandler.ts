@@ -7,7 +7,7 @@ export async function handleOnPaymentEnd(msg: TelegramBot.Message) {
         const successfulPayment = msg.successful_payment;
         if (successfulPayment){
             const invoicePayload = successfulPayment?.invoice_payload;
-            sendConfigToUserAfterPayment(invoicePayload.split('__')[0], msg?.from?.id || 0)
+            sendConfigToUserAfterPayment(invoicePayload.split('__')[0], msg.chat.id, msg?.from?.id || 0)
         }
     }
     catch(error){

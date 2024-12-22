@@ -1,5 +1,4 @@
 import { JSONSchema, Model, RelationMappings } from "objection";
-import VPNConfig from "./VPNConfig";
 import Transaction from "./Transaction";
 
 class User extends Model {
@@ -7,7 +6,6 @@ class User extends Model {
     static tableName: string = "users";
 
     id!: number;
-    vpnConfigs?: VPNConfig[];
     transactions?: Transaction[];
 
     static jsonSchema: JSONSchema = {
@@ -20,14 +18,6 @@ class User extends Model {
     };
 
     static relationMappings: RelationMappings = {
-        vpnConfigs: {
-            relation: Model.HasManyRelation,
-            modelClass: VPNConfig,
-            join: {
-                from: "users.id",
-                to: "vpn_configs.chat_id",
-            },
-        },
         transactions: {
             relation: Model.HasManyRelation,
             modelClass: Transaction,
