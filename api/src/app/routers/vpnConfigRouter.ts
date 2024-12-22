@@ -1,5 +1,5 @@
 import Router from 'koa-router'
-import {createClientConfig, getClientConfig, listClients, revokeAndDeleteClient } from '../controllers/VPNConfigController'
+import {createClientConfig, deleteClientController, deleteExiredConfigsController, getClientConfig, listClients } from '../controllers/VPNConfigController'
 
 export const vpnConfigRouter = new Router({
   prefix: `/config`,
@@ -8,4 +8,5 @@ export const vpnConfigRouter = new Router({
 vpnConfigRouter.post(`/list`, listClients)
 vpnConfigRouter.post(`/get`, getClientConfig)
 vpnConfigRouter.post(`/create`, createClientConfig)
-vpnConfigRouter.post(`/delete`, revokeAndDeleteClient)
+vpnConfigRouter.post(`/delete`, deleteClientController)
+vpnConfigRouter.post(`/expired/delete`, deleteExiredConfigsController)

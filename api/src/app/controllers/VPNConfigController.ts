@@ -8,6 +8,7 @@ import fs from 'fs/promises';
 import util from 'util';
 import Config from '../models/Config';
 import * as yup from 'yup';
+import { revokeAndDeleteClient } from '../utils/execCommands';
 
 
 
@@ -65,7 +66,7 @@ export async function getClientConfig( appContext: ParameterizedContext<
 
 const schema = yup.object({
   chatId: yup.string().required('Client ID is required'),
-  validUntil: yup.date().required('ValidUntil date is required').min(new Date(), 'ValidUntil must be a future date'),
+  // validUntil: yup.date().required('ValidUntil date is required').min(new Date(), 'ValidUntil must be a future date'),
 });
 
 export async function createClientConfig(
@@ -104,7 +105,7 @@ export async function createClientConfig(
       fileContents[path.basename(filePath)] = contentBuffer.toString('base64');
     }
 
-    const config = await Config.query().insert({
+    await Config.query().insert({
       chat_id: chatId,
       config_p12: fileContents[`${chatId}.p12`],
       config_sswan: fileContents[`${chatId}.sswan`],
@@ -117,7 +118,7 @@ export async function createClientConfig(
     }
 
     appContext.body = {
-      message: `Client "${chatId}" created and exported successfully.`,
+      message: `Client with chatID "${chatId}" created and exported successfully.`,
       files: fileContents,
     };
   } catch (error) {
@@ -198,7 +199,7 @@ export async function listClients( appContext: ParameterizedContext<
     }
 }
 
-export async function revokeAndDeleteClient(
+export async function deleteClientController(
   appContext: ParameterizedContext<
     Koa.DefaultState,
     Router.IRouterParamContext<Koa.DefaultState, object>
@@ -214,16 +215,10 @@ export async function revokeAndDeleteClient(
   }
 
   try {
-  const revokeCommand = `docker exec vpn ikev2.sh --revokeclient ${chatId} -y`;
-  await execPromise(revokeCommand);
-
-  const deleteCommand = `docker exec vpn ikev2.sh --deleteclient ${chatId} -y`;
-  await execPromise(deleteCommand);
-
-  await Config.query().delete().where('chat_id', chatId);
-
+    await revokeAndDeleteClient(chatId)
+    
     appContext.body = {
-      message: `Client "${chatId}" has been revoked and deleted successfully.`,
+      message: `Client with chatID "${chatId}" has been revoked and deleted successfully.`,
     };
   } catch (error) {
     let errorMessage = 'An unexpected error occurred.';
@@ -248,4 +243,45 @@ export async function revokeAndDeleteClient(
       details: details,
     };
   }
+}
+export async function deleteExiredConfigsController(appContext: ParameterizedContext<
+  Koa.DefaultState,
+  Router.IRouterParamContext<Koa.DefaultState, object>
+>){
+  try{
+    const expiredConfigs = await Config.query().where('valid_until_date', '<', new Date().toISOString());
+    for (const config of expiredConfigs){
+        await revokeAndDeleteClient(config.chat_id)
+    }
+    const expiredChatIDs = expiredConfigs.map((config)=> config.chat_id)
+    await Config.query().where('valid_until_date', '<', new Date().toISOString()).delete();
+    appContext.body = {
+      message: `${expiredChatIDs.length} clients have been revoked and deleted successfully.`,
+      chatIDs: expiredChatIDs
+    };
+    
+  }
+    catch(error){
+      let errorMessage = 'An unexpected error occurred.';
+      let command = null;
+      let details = null;
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+  
+        if (error.cmd) {
+          command = error.cmd;
+        }
+        if (error.stderr) {
+          const match = error.stderr.match(/Error: (.+)/);
+          details = match ? match[1] : error.stderr;
+        }
+      }
+      appContext.status = 500;
+      appContext.body = {
+        error: errorMessage,
+        command: command,
+        details: details,
+      };
+    }
 }
