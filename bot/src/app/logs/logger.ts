@@ -38,11 +38,11 @@ const logger = new ExtendedLogger({
 });
 
 process.on('uncaughtException', (error) => {
-	logger.logError(error, null, ['uncaughtException']);
+	logger.logError(error, '', ['uncaughtException']);
 });
 
 process.on('unhandledRejection', (reason) => {
-	logger.logError(reason, null, ['unhandledRejection']);
+	logger.logError(reason, '', ['unhandledRejection']);
 });
   
 

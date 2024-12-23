@@ -6,12 +6,12 @@ import logger from "../../../logs/logger";
 export function handleOnPaymentStart(preCheckoutQuery:TelegramBot.PreCheckoutQuery ){
     try{
         bot.answerPreCheckoutQuery(preCheckoutQuery.id, true)
-        .then(()=>{
-            createTransaction(preCheckoutQuery.id, preCheckoutQuery.from.id, preCheckoutQuery.total_amount, "telegram", preCheckoutQuery.invoice_payload);
+        .then(async()=>{
+            await createTransaction(preCheckoutQuery.id, preCheckoutQuery.from.id, preCheckoutQuery.total_amount, "telegram", preCheckoutQuery.invoice_payload);
             preCheckoutQuery.invoice_payload = preCheckoutQuery.id;
         })
     }
     catch(error){
-        logger.logError(error,preCheckoutQuery.from,["paymentStartError"]);
+        logger.logError(error,preCheckoutQuery.from,["PAYMENT_START_ERROR"]);
     }
 } 

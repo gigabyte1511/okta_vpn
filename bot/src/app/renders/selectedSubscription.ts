@@ -16,7 +16,7 @@ export function renderSelectedSubscription(value: SubscriptionOption) {
         keyboardObject.inline_keyboard.unshift(
             [
                 {
-                    text:paymentMethod.name,
+                    text:`💳 ${paymentMethod.name}`,
                     callback_data: `${Callback.PAYMENT}/${value}/${paymentMethod.name}`
                 }
             ]

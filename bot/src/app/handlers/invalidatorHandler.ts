@@ -1,11 +1,13 @@
 import { API } from "../api"
+import logger from "../logs/logger";
+import { informUsersOfInvalidData } from "./common/invalidateNotifyer";
 
 export const handleInvalidateConfig = async()=>{
-    const response = await API.deleteExiredConfigs()
+    const response = await API.deleteExiredConfigs();
     if(response.success){
-        console.log(`Deleted clients: ${(response.data.chatIDs.length)?response.data.chatIDs:'0'}`);
-        
+        informUsersOfInvalidData(response.data.chatIDs, response.data.message);
+        console.log(response)
     }else{
-        console.log(`Error while invalidating: ${response.message}`)
+        logger.logError(JSON.stringify(response),'',["INVALIDATE_API_ERROR"]);
     }
 }

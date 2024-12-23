@@ -5,24 +5,24 @@ export function renderSubscriptionsList() {
         inline_keyboard: [
             [
                 {
-                    text: "1 месяц",
+                    text: "📅 1 месяц",
                     callback_data: `${Callback.SUBSCRIPTION_SELECTED}/${SubscriptionOption.MONTH_1}`,
                 },
                 {
-                    text: "2 месяца",
+                    text: "📅 2 месяца",
                     callback_data: `${Callback.SUBSCRIPTION_SELECTED}/${SubscriptionOption.MONTH_2}`,
                 },
             ],
             [
                 {
-                    text: "6 месяцев",
+                    text: "📆 6 месяцев",
                     callback_data: `${Callback.SUBSCRIPTION_SELECTED}/${SubscriptionOption.MONTH_6}`,
                 },
                 {
-                    text: "12 месяцев",
+                    text: "📆 12 месяцев",
                     callback_data: `${Callback.SUBSCRIPTION_SELECTED}/${SubscriptionOption.MONTH_12}`,
                 },
             ],
-        ],
+        ],        
     };
 }

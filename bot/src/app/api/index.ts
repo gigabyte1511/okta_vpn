@@ -56,7 +56,7 @@ export class API {
                 params,        )
                 return result
     } 
-    static async createClientConfig(params:{chatId: string}) {
+    static async createClientConfig(params:{chatId: string,validUntil:string}) {
         const result = await API.performApiRequest<{message: string, files: Record<string, string> }>(
           'POST',
           `/config/create`,

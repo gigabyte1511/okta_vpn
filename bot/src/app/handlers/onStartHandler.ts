@@ -10,7 +10,7 @@ export function handleOnStart(msg: TelegramBot.Message) {
             reply_markup: {
                 keyboard: [
                     [{ text: NavMessage.BUYCONFIG }],
-                    [{ text: NavMessage.USERCONFIGS }, { text: NavMessage.SUPPORT }],
+                    [{ text: NavMessage.USERCONFIGS }, { text: NavMessage.SUPPORT }, {text: NavMessage.INSTRUCTION}],
                 ],
                 resize_keyboard: true,
                 one_time_keyboard: false,
@@ -24,6 +24,6 @@ export function handleOnStart(msg: TelegramBot.Message) {
         );
     } 
     catch(error) {
-        logger.logError(error,msg.from,["onStartError"]);
+        logger.logError(error,msg.from,["START_ERROR"]);
     }
 }

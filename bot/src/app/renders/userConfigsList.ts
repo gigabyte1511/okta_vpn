@@ -1,11 +1,10 @@
 import { Callback } from "../types";
-import VPNConfig from "../models/VPNConfig";
 
-export function renderUserConfigsList(configs: any) {
-    const renderedConfigs = [configs].map((config) => {
+export function renderUserConfigsList(configs: [Record<string, string>]) {
+    const renderedConfigs = configs.map((config) => {
         return [
             {
-                text: `${config.success}`,
+                text: `🌐 Config #${configs.indexOf(config) + 1}`,
                 callback_data: `${Callback.GET_CONFIG}/${Math.random()}`,
             },
         ];

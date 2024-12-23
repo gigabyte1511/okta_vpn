@@ -6,7 +6,7 @@ export function renderBuyVPN() {
             inline_keyboard: [
                 [
                     {
-                        text: "Buy VPN",
+                        text: "⭐ Оформить подписку",
                         callback_data: `${Callback.SUBSCRIPTION_LIST}`,
                     },
                 ],

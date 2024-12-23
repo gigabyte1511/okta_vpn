@@ -26,7 +26,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 					show_alert: false,
 				});
 
-				bot.editMessageText("Выберите подписку:", {
+				bot.editMessageText("💎 Выберите подписку:", {
 					chat_id: chatId,
 					message_id: messageId,
 					reply_markup: renderSubscriptionsList(),
@@ -100,16 +100,16 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 
 					//если успешный статус, то отправляем существующий конфиг
 					if (transactionStatus && transactionValue){
-						const configExist = await sendExistConfigToUser(chatId,`Вот ваш конфиг по последней оплате`);
+						const configExist = await sendExistConfigToUser(chatId);
 
 						//если транзакция есть/оплата есть, но конфига нет - отправляем новый
 						if (configExist === false){
-							const month = (transactionValue as string).split('__')[0];
+							const month = Number((transactionValue as string).split('__')[0]);
 							await sendConfigToUserAfterPayment(month,chatId,userId);
 						}
 					}
 					else {
-						const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения.`;
+						const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения. Если возникли вопросы - обратитесь в поддержку, мы с радостью поможем!`;
 						bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
 					}
 				} 
@@ -123,11 +123,11 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				sendExistConfigToUser(chatId,'Ваш список конфигов:');
+				sendExistConfigToUser(chatId);
 			}
 		}
 	}
 	catch(error){
-		logger.logError(error,callbackQuery?.message?.chat,[`${callbackQuery.data}`,"callbackError"]);
+		logger.logError(error,callbackQuery?.message?.chat,[`${callbackQuery.data}`,"CALLBACK_ERROR"]);
 	}
 }
