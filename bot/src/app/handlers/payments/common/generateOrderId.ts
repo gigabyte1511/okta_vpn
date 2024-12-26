@@ -1,4 +1,4 @@
-export function generateOrderId(orderType:string): string {
+export function generateOrderId(month:string): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-';
     const length = 15;
     let orderId = '';
@@ -7,6 +7,6 @@ export function generateOrderId(orderType:string): string {
         const randomIndex = Math.floor(Math.random() * chars.length);
         orderId += chars[randomIndex];
     }
-
-    return `${orderType}__${orderId}`;
+    
+    return `${JSON.stringify({month:month,ident:orderId})}`;
 }

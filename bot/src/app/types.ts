@@ -6,7 +6,9 @@ export enum Callback {
     PAYMENT = "payment",
     PURCHASE_OFFER = "purchase offer",
     GET_CONFIG = "get_config",
-    GET_PAYMENT_STATUS = "get_transaction_status"
+    GET_PAYMENT_STATUS = "get_transaction_status",
+    GET_CLIENTLIST = "get_client_list",
+    CREATE_NEWSLETTER = "create_newsletter"
 }
 
 //варианты подписки

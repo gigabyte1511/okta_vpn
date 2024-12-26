@@ -1,7 +1,7 @@
 import { createVpnConfig, getVpnConfig } from "../controllers/vpnConfigController";
 import { findOrCreateUser } from "../controllers/userController";
-import { bot } from "../..";
 import { getLastTransactionByParameter,updateTransaction } from "../controllers/transactionController";
+import { bot } from "../..";
 import fs from 'fs/promises'
 import path from 'path';
 
@@ -19,25 +19,18 @@ const sendConfigFromBuffer = async(files:Object, chatId:number)=>{
 
 //генерируем и отправляем конфиг пользователю
 export async function sendConfigToUserAfterPayment(month:number, chatId:number, userId: number){
-    //существующий конфиг отправляем (переделать под массив)
-    const getConfigResponse = await getVpnConfig(chatId);
-    if (getConfigResponse.success === true){
-        await sendConfigFromBuffer(getConfigResponse.data.files, chatId);
-        return;
-    }
-
     //создаем конфиг с датой валидацией
     const validUntilDate = new Date();
     validUntilDate.setMonth(validUntilDate.getMonth() + month);
-    const transactionId = await getLastTransactionByParameter(chatId,"id");
-
     const createConfigResponse = await createVpnConfig(chatId, validUntilDate.toISOString());
 
     if (createConfigResponse.success === true){
         await bot.sendMessage(chatId, `🎉 <b>Поздравляем с успешным приобретением!</b> 🎉\n\n` + 
-    `Перед установкой, пожалуйста, ознакомьтесь с инструкцией 📋. Это поможет вам быстро и без проблем настроить все!`)
+        `Перед установкой, пожалуйста, ознакомьтесь с инструкцией 📋. Это поможет вам быстро и без проблем настроить все!`,{parse_mode:"HTML"});
         await sendConfigFromBuffer(createConfigResponse.data.files,chatId);
-        await updateTransaction(transactionId as string,{state:true});
+        
+        const transactionId = await getLastTransactionByParameter(chatId,"id");
+        updateTransaction(transactionId as string,{state:true, orderValue:createConfigResponse.data.message});
     } else {
         throw new Error(JSON.stringify(createConfigResponse))
     }

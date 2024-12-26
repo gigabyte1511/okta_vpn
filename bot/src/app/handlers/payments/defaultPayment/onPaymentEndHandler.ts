@@ -8,14 +8,15 @@ export async function handleOnPaymentEnd(msg: TelegramBot.Message) {
         if (successfulPayment){
             //с чека забираем постинфо и месяц
             const invoicePayload = successfulPayment?.invoice_payload;
-            const month = Number(invoicePayload.split('__')[0]);
+            const monthFromPayload = JSON.parse(invoicePayload).month;
+            const month = Number(monthFromPayload);
 
             //данные пользователя
             const chatId = msg.chat.id;
             const userId = msg?.from?.id;
 
             sendConfigToUserAfterPayment(month, chatId, userId || 0);
-        }
+        } else throw new Error(JSON.stringify(msg));
     }
     catch(error){
         logger.logError(error,msg?.from,["PAYMENT_END_ERROR"]);

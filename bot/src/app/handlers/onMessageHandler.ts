@@ -5,12 +5,14 @@ import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { Callback } from "../types";
 import { getVpnConfig } from "./controllers/vpnConfigController";
 import { renderUserConfigsList } from "../renders/userConfigsList";
+import { renderAdminPanel } from "../renders/adminPanel";
 
 export enum NavMessage {
     SUPPORT = "💬 Поддержка",
     USERCONFIGS = "🛠️ Мои конфигурации",
     BUYCONFIG = "🛒 Купить",
-    INSTRUCTION = "🌐 Инструкция"
+    INSTRUCTION = "🌐 Инструкция",
+    ADMIN = "👨‍💻 Администрирование"
 }
 
 export function hadleOnMesssage(msg: TelegramBot.Message) {
@@ -29,7 +31,17 @@ function handleNavMessage(msg: TelegramBot.Message) {
         handlBuyConfigMsg(msg);
     } else if (text === NavMessage.INSTRUCTION){
         handleInstructionMsg(msg)
+    } else if (text === NavMessage.ADMIN){
+        handleAdminMsg(msg)
     }
+}
+
+function handleAdminMsg(msg: TelegramBot.Message) {
+    const chatId = msg.chat.id;
+    const keyboard = {
+        reply_markup: renderAdminPanel(),
+    };
+    bot.sendMessage(chatId, "Выберите действие:", keyboard);
 }
 
 function handleInstructionMsg(msg: TelegramBot.Message) {
@@ -95,7 +107,7 @@ function handleNavSupportMsg(msg: TelegramBot.Message) {
 }
 
 //рендер списка сообщений
-async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
+export async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
 
     if (msg.from) {

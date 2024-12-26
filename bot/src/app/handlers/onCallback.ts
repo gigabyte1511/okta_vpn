@@ -9,6 +9,10 @@ import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
 import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
 import Cryptomus from "./payments/cryptoPayment/cryptomus";
 import logger from "../logs/logger";
+import { API } from "../api";
+import { resendMediaToUsers } from "./common/resendMediaToUsers";
+import { handleNavMyConfigsMsg } from "./onMessageHandler";
+import { getVpnConfig } from "./controllers/vpnConfigController";
 
 export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery) {
 	try{
@@ -100,12 +104,19 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 
 					//если успешный статус, то отправляем существующий конфиг
 					if (transactionStatus && transactionValue){
-						const configExist = await sendExistConfigToUser(chatId);
+						const monthFromTransaction = JSON.parse(transactionValue).month;
+						const configExist = await getVpnConfig(chatId);
 
 						//если транзакция есть/оплата есть, но конфига нет - отправляем новый
-						if (configExist === false){
-							const month = Number((transactionValue as string).split('__')[0]);
+						if (configExist.success === false){
+							const month = Number(monthFromTransaction);
 							await sendConfigToUserAfterPayment(month,chatId,userId);
+						}
+
+						if (configExist.success === true){
+							const messageToUser = `✅ <b>Транзакция</b> <i>#${transactionId}</i> успешно завершена. Получите ваши конфигурации по кнопке ниже:`;
+							bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
+							await handleNavMyConfigsMsg(message);
 						}
 					}
 					else {
@@ -125,6 +136,34 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				});
 				sendExistConfigToUser(chatId);
 			}
+
+			//колбек на получение пользователей
+			if (data.includes(`${Callback.GET_CLIENTLIST}`)) {
+				bot.answerCallbackQuery(callbackQuery.id, {
+					show_alert: false,
+				});
+
+				const userList = await API.getConfigsList();
+				if (userList.success === true){
+					let sendMessage = "<b>Список пользователей:</b>\n\n";
+					for (const user of userList.data.clients){
+						sendMessage+=`<i>- ${user.clientName}: ${user.valid ? "Действующий" : "Просроченный"}</i>\n`;
+					}
+					bot.sendMessage(chatId,sendMessage,{parse_mode:'HTML'});
+				}
+			}
+
+			//колбек на получение отправку рассылки
+			if (data.includes(`${Callback.CREATE_NEWSLETTER}`)) {
+				bot.answerCallbackQuery(callbackQuery.id, {
+					show_alert: false,
+				});
+				const userList = await API.getConfigsList();
+			
+				if (userList.success === true) {
+					await resendMediaToUsers(chatId,userList);
+				}
+			}			
 		}
 	}
 	catch(error){
