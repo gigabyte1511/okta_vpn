@@ -4,6 +4,14 @@ import { ApiConfig } from '../types';
 
 export const apiConfig: ApiConfig = config.get("api");
 
+export interface ConfigsAPIResponse {
+    name: string, 
+    files: {
+        mobileconfig: string,
+        sswan: string,
+        p12: string
+    }
+}
 
 const axiosInstance = axios.create({
     baseURL: apiConfig.baseURL,
@@ -49,15 +57,15 @@ export class API {
             `/config/list`,)
             return result
     }
-    static async getClientConfig(params:{chatId: string}) {
-            const result = await API.performApiRequest<{ message: string, files: Record<string, string> }>(
+    static async getClientConfigs(params:{chatId: string}) {
+            const result = await API.performApiRequest<{message: string, configs: ConfigsAPIResponse[] }>(
                 'POST',
                 `/config/get`,
                 params,        )
                 return result
     } 
-    static async createClientConfig(params:{chatId: string,validUntil:string}) {
-        const result = await API.performApiRequest<{message: string, files: Record<string, string> }>(
+    static async createClientConfig(params:{chatId: string, validUntil: string}) {
+        const result = await API.performApiRequest<{message: string, config: ConfigsAPIResponse }>(
           'POST',
           `/config/create`,
           params,          )
@@ -71,9 +79,17 @@ export class API {
           return result
     }
     static async deleteExiredConfigs() {
-        const result = await API.performApiRequest<{ message: string, chatIDs: string[] }>(
+        const result = await API.performApiRequest<{ message: string, configNames: string[] }>(
           'POST',
           `/config/expired/delete` )
           return result
     }
+    static async getClientConfigByID(params:{chatId: string, id: number}) {
+        
+        const result = await API.performApiRequest<{message: string, config: ConfigsAPIResponse }>(
+            'POST',
+            `/config/get/id`,
+            params,        )
+            return result
+    } 
 }

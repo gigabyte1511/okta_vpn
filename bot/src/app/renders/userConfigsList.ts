@@ -1,11 +1,12 @@
+import { ConfigsAPIResponse } from "../api";
 import { Callback } from "../types";
 
-export function renderUserConfigsList(configs: [Record<string, string>]) {
+export function renderUserConfigsList(configs: ConfigsAPIResponse[]) {
     const renderedConfigs = configs.map((config) => {
         return [
             {
-                text: `🌐 Config #${configs.indexOf(config) + 1}`,
-                callback_data: `${Callback.GET_CONFIG}/${Math.random()}`,
+                text: `🌐 Config #${config.name}`,
+                callback_data: `${Callback.GET_CONFIG}/${config.name}`,
             },
         ];
     });

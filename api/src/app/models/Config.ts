@@ -6,9 +6,9 @@ class Config extends Model {
 
     id!: number;
     chat_id!: string;
-    config_mobileconfig!: Buffer;
-    config_p12!: Buffer;
-    config_sswan!: Buffer;
+    config_mobileconfig!: string;
+    config_p12!: string;
+    config_sswan!: string;
     valid_until_date!: string;
     created_at!: string;
 
