@@ -50,14 +50,14 @@ export class API {
             return result
     }
     static async getClientConfig(params:{chatId: string}) {
-            const result = await API.performApiRequest<{ message: string, files: Record<string, string> }>(
+            const result = await API.performApiRequest<{message: string, configs: {name: string, files:{ mobileconfig: string, sswan: string, p12: string}}[] }>(
                 'POST',
                 `/config/get`,
                 params,        )
                 return result
     } 
-    static async createClientConfig(params:{chatId: string,validUntil:string}) {
-        const result = await API.performApiRequest<{message: string, files: Record<string, string> }>(
+    static async createClientConfig(params:{chatId: string, validUntil:string}) {
+        const result = await API.performApiRequest<{message: string, config: {name: string, files:{ mobileconfig: string, sswan: string, p12: string}} }>(
           'POST',
           `/config/create`,
           params,          )
@@ -71,7 +71,7 @@ export class API {
           return result
     }
     static async deleteExiredConfigs() {
-        const result = await API.performApiRequest<{ message: string, chatIDs: string[] }>(
+        const result = await API.performApiRequest<{ message: string, configNames: string[] }>(
           'POST',
           `/config/expired/delete` )
           return result
