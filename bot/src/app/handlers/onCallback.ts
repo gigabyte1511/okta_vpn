@@ -12,7 +12,7 @@ import logger from "../logs/logger";
 import { API } from "../api";
 import { resendMediaToUsers } from "./common/resendMediaToUsers";
 import { handleNavMyConfigsMsg } from "./onMessageHandler";
-import { getVpnConfig } from "./controllers/vpnConfigController";
+import { getVpnConfigs } from "./controllers/vpnConfigController";
 
 export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery) {
 	try{
@@ -105,7 +105,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 					//если успешный статус, то отправляем существующий конфиг
 					if (transactionStatus && transactionValue){
 						const monthFromTransaction = JSON.parse(transactionValue).month;
-						const configExist = await getVpnConfig(chatId);
+						const configExist = await getVpnConfigs(chatId);
 
 						//если транзакция есть/оплата есть, но конфига нет - отправляем новый
 						if (configExist.success === false){
@@ -134,7 +134,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				sendExistConfigToUser(chatId);
+				sendExistConfigToUser(chatId, Number(data.split('/')[1].split('-')[1]));
 			}
 
 			//колбек на получение пользователей

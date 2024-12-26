@@ -57,7 +57,7 @@ export class API {
             `/config/list`,)
             return result
     }
-    static async getClientConfig(params:{chatId: string}) {
+    static async getClientConfigs(params:{chatId: string}) {
             const result = await API.performApiRequest<{message: string, configs: ConfigsAPIResponse[] }>(
                 'POST',
                 `/config/get`,
@@ -84,4 +84,12 @@ export class API {
           `/config/expired/delete` )
           return result
     }
+    static async getClientConfigByID(params:{chatId: string, id: number}) {
+        
+        const result = await API.performApiRequest<{message: string, config: ConfigsAPIResponse }>(
+            'POST',
+            `/config/get/id`,
+            params,        )
+            return result
+    } 
 }

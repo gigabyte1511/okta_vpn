@@ -2,7 +2,7 @@ import { exec } from 'child_process'
 import { ParameterizedContext } from 'koa';
 import Koa from 'koa'
 import Router from 'koa-router'
-import { VPNConfigRequestPayload } from '../types';
+import { VPNConfigByIDRequestPayload, VPNConfigRequestPayload } from '../types';
 import path from 'path'
 import fs from 'fs/promises';
 import util from 'util';
@@ -10,9 +10,6 @@ import Config from '../models/Config';
 import * as yup from 'yup';
 import { revokeAndDeleteClient } from '../utils/execCommands';
 import { transaction } from 'objection';
-import { log } from 'winston';
-
-
 
 
 const execPromise = util.promisify(exec);
@@ -49,7 +46,59 @@ export async function getClientConfigs( appContext: ParameterizedContext<
 
     appContext.body = {
       message: `Configs for client with "${chatId}" exported successfully.`,
-      configs: formattedConfigs, // Возвращаем массив объектов
+      configs: formattedConfigs,
+    };
+
+    } catch (error) {
+      let errorMessage = 'An unexpected error occurred.';
+  
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      appContext.status = 500;
+      appContext.body = {
+        details: {
+          error: errorMessage,
+          syscall: error.syscall,
+          path: error.path
+        },
+      };
+    }
+}
+
+export async function getClientConfigByID( appContext: ParameterizedContext<
+  Koa.DefaultState,
+  Router.IRouterParamContext<Koa.DefaultState, object>
+>,){
+  const body = appContext.request.body as VPNConfigByIDRequestPayload  
+  console.log(body) 
+  const chatId = body.chatId
+  if (!chatId) {
+      appContext.status = 400;
+      appContext.body = { error: 'Client name is required' };
+      return;
+  }
+  try {
+    const config = await Config.query().where({chat_id: chatId, id: body.id}).first();
+
+    if (!config) {
+      appContext.status = 404;
+      appContext.body = { error: `Configurations for client "${chatId}" with ID "${body.id}" not found.` };
+      return;
+    }
+
+    const formattedConfig = {
+      name: `${chatId}-${config.id}`,
+      files: {
+        mobileconfig: config.config_mobileconfig,
+        sswan: config.config_sswan,
+        p12: config.config_p12,
+      },
+    };
+
+    appContext.body = {
+      message: `Configs for client with "${chatId}" exported successfully.`,
+      config: formattedConfig,
     };
 
     } catch (error) {

@@ -3,7 +3,7 @@ import { bot, botConfig } from "..";
 import { renderBuyVPN } from "../renders/buyVPN";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { Callback } from "../types";
-import { getVpnConfig } from "./controllers/vpnConfigController";
+import { getVpnConfigs } from "./controllers/vpnConfigController";
 import { renderUserConfigsList } from "../renders/userConfigsList";
 import { renderAdminPanel } from "../renders/adminPanel";
 
@@ -111,7 +111,7 @@ export async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
     const chatId = msg.chat.id;
 
     if (msg.from) {
-        const vpnConfigs = await getVpnConfig(chatId);
+        const vpnConfigs = await getVpnConfigs(chatId);
         if (vpnConfigs.success === false) {
             bot.sendMessage(chatId, "У вас нет активных VPN", renderBuyVPN());
             return;
@@ -120,7 +120,7 @@ export async function handleNavMyConfigsMsg(msg: TelegramBot.Message) {
             bot.sendMessage(
                 chatId,
                 "Ваш лист конфигураций:",
-                renderUserConfigsList([vpnConfigs.data.files])
+                renderUserConfigsList(vpnConfigs.data.configs)
             );
         }
     }
