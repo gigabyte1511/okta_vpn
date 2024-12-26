@@ -4,6 +4,14 @@ import { ApiConfig } from '../types';
 
 export const apiConfig: ApiConfig = config.get("api");
 
+export interface ConfigsAPIResponse {
+    name: string, 
+    files: {
+        mobileconfig: string,
+        sswan: string,
+        p12: string
+    }
+}
 
 const axiosInstance = axios.create({
     baseURL: apiConfig.baseURL,
@@ -50,14 +58,14 @@ export class API {
             return result
     }
     static async getClientConfig(params:{chatId: string}) {
-            const result = await API.performApiRequest<{message: string, configs: {name: string, files:{ mobileconfig: string, sswan: string, p12: string}}[] }>(
+            const result = await API.performApiRequest<{message: string, configs: ConfigsAPIResponse[] }>(
                 'POST',
                 `/config/get`,
                 params,        )
                 return result
     } 
-    static async createClientConfig(params:{chatId: string, validUntil:string}) {
-        const result = await API.performApiRequest<{message: string, config: {name: string, files:{ mobileconfig: string, sswan: string, p12: string}} }>(
+    static async createClientConfig(params:{chatId: string, validUntil: string}) {
+        const result = await API.performApiRequest<{message: string, config: ConfigsAPIResponse }>(
           'POST',
           `/config/create`,
           params,          )
