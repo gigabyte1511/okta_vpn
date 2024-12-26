@@ -345,7 +345,7 @@ export async function deleteExiredConfigsController(appContext: ParameterizedCon
     await Config.query().where('valid_until_date', '<', new Date().toISOString()).delete();
     appContext.body = {
       message: `${expiredChatIDs.length} clients have been deleted.`,
-      chatIDs: expiredChatIDs
+      configNames: expiredChatIDs
     };
     
   }

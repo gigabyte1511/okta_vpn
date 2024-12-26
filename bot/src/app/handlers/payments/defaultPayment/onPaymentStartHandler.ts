@@ -9,6 +9,7 @@ export function handleOnPaymentStart(preCheckoutQuery:TelegramBot.PreCheckoutQue
         .then(async()=>{
             await createTransaction(preCheckoutQuery.id, preCheckoutQuery.from.id, preCheckoutQuery.total_amount, "telegram", preCheckoutQuery.invoice_payload);
             preCheckoutQuery.invoice_payload = preCheckoutQuery.id;
+            logger.logInfo("payment started",preCheckoutQuery.from,["PAYMENT_START_SUCCESS"]);
         })
     }
     catch(error){

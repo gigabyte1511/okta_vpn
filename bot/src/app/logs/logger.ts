@@ -20,6 +20,14 @@ class ExtendedLogger extends Bunyan {
 			...additionalInfo,
 		}));
 	}
+	logInfo(message:string,chatId?:any, tags: string[]=[]) {
+		this.info(JSON.stringify({
+			message:message,
+			chatId:chatId,
+			timestamp: new Date().toISOString().slice(0, 19),
+			tags
+		}))
+	}
 }
 
 // Создаем логгер с двумя потоками: stdout и Logstash

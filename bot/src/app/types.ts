@@ -64,3 +64,8 @@ export interface BotConfig {
 export interface ApiConfig {
     baseURL: string;
 }
+
+export type InformData = {
+    chatId: string,
+    orderValue: string
+}

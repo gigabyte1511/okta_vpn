@@ -79,6 +79,8 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				paymentMethod 
 					? sendPaymentInvoice(chatId,subScriptionValue,paymentMethod)
 					: bot.sendMessage(chatId, `Не найдены доступные методы оплаты. Пожалуйста, свяжитесь с поддержкой.`);
+
+				logger.logInfo("invoice sended",chatId,["INVOICE_SUCCESS"]);
 			}
 
 			//получаем статус платежа
@@ -111,17 +113,20 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 						if (configExist.success === false){
 							const month = Number(monthFromTransaction);
 							await sendConfigToUserAfterPayment(month,chatId,userId);
+							logger.logInfo("config created",chatId,["SEND_CONFIG_FROM_STATUS_SUCCESS"]);
 						}
 
 						if (configExist.success === true){
 							const messageToUser = `✅ <b>Транзакция</b> <i>#${transactionId}</i> успешно завершена. Получите ваши конфигурации по кнопке ниже:`;
 							bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
 							await handleNavMyConfigsMsg(message);
+							logger.logInfo("config already exist",chatId,["GET_CONFIG_FROM_STATUS_SUCCESS"]);
 						}
 					}
 					else {
 						const messageToUser = `⏳ <b>Транзакция</b> <i>#${transactionId}</i> ожидает завершения. Если возникли вопросы - обратитесь в поддержку, мы с радостью поможем!`;
 						bot.sendMessage(chatId,messageToUser,{ parse_mode: 'HTML' });
+						logger.logInfo("transaction not completed",chatId,["GET_CONFIG_FROM_STATUS_UNDEFINED"]);
 					}
 				} 
 				else {
@@ -135,6 +140,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 					show_alert: false,
 				});
 				sendExistConfigToUser(chatId, Number(data.split('/')[1].split('-')[1]));
+				logger.logInfo("get config by button success",chatId,["GET_CONFIG_MENU_SUCCESS"]);
 			}
 
 			//колбек на получение пользователей

@@ -14,7 +14,7 @@ export async function handleOnPaymentEnd(msg: TelegramBot.Message) {
             //данные пользователя
             const chatId = msg.chat.id;
             const userId = msg?.from?.id;
-
+            logger.logInfo("payment ended",chatId,["PAYMENT_END_SUCCESS"]);
             sendConfigToUserAfterPayment(month, chatId, userId || 0);
         } else throw new Error(JSON.stringify(msg));
     }

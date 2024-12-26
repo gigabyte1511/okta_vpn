@@ -5,6 +5,7 @@ import { bot } from "../..";
 import fs from 'fs/promises'
 import path from 'path';
 import { ConfigsAPIResponse } from "../../api";
+import logger from "../../logs/logger";
 
 const sendConfigFromBuffer = async(config:ConfigsAPIResponse, chatId:number)=>{
     
@@ -31,8 +32,10 @@ export async function sendConfigToUserAfterPayment(month:number, chatId:number, 
         `Перед установкой, пожалуйста, ознакомьтесь с инструкцией 📋. Это поможет вам быстро и без проблем настроить все!`,{parse_mode:"HTML"});
         await sendConfigFromBuffer(createConfigResponse.data.config,chatId);
         
+        const orderValue = createConfigResponse.data.config.name.split("-")[1];
         const transactionId = await getLastTransactionByParameter(chatId,"id");
-        updateTransaction(transactionId as string,{state:true, orderValue:createConfigResponse.data.message});
+        updateTransaction(transactionId as string,{state:true, orderValue:orderValue});
+        logger.logInfo("config created after payment",chatId,["CREATE_CONFIG_SUCCESS"]);
     } else {
         throw new Error(JSON.stringify(createConfigResponse))
     }
@@ -51,7 +54,10 @@ export async function sendExistConfigToUser(chatId:number, indexConfigToSend:num
         //     : allConfigs.data.files
 
         await sendConfigFromBuffer(config.data.config,chatId);
-    } 
+        logger.logInfo("send existed config",chatId,["SEND_EXISTED_CONFIG_SUCCESS"]);
+    } else {
+        bot.sendMessage(chatId, "Запрашиваемая конфигурация не найдена. Если возникли вопросы - обратитесь в поддержку.")
+    }
     return config.success;
 }
 

@@ -24,3 +24,8 @@ export async function updateTransaction(transactionId: string, data: Partial<Tra
         .patchAndFetchById(transactionId, data);
     return updatedTransaction;
 }
+
+export async function deleteTransaction(orderValue: string) {
+    const transaction = await Transaction.query().findOne("orderValue", orderValue).first().delete();
+    return transaction;
+}
