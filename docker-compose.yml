@@ -100,7 +100,6 @@ services:
             sh -c "
             cd /var/app/ &&
             npm install -g bunyan knex &&
-            npm install winston &&
             npm install &&
             npx knex migrate:latest &&
             npx knex seed:run &&
