@@ -164,9 +164,14 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				const userList = await API.getConfigsList();
+				const configsList = await API.getConfigsList();
+
 			
-				if (userList.success === true) {
+				if (configsList.success === true) {
+					const userList = Array.from(new Set(
+						configsList.data.clients
+							.map(client => client.clientName.split('-')[0]) // Убираем суффиксы после "-"
+					));
 					await resendMediaToUsers(chatId,userList);
 				}
 			}			

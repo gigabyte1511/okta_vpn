@@ -1,18 +1,7 @@
 import { bot } from "../..";
 import logger from "../../logs/logger";
 
-type UserList = {
-    success: true;
-    data: {
-        message: string;
-        clients: {
-            clientName: string;
-            valid: boolean;
-        }[];
-    };
-}
-
-export const resendMediaToUsers = async(chatId:number,userList:UserList)=>{
+export const resendMediaToUsers = async(chatId:number,userList:string[])=>{
     //узнаем тип контента
     await bot.sendMessage(chatId, 'Впишите тип контента, который вы хотите отправить? (фото/видео/гиф)');
     bot.once('message', async (message) => {
@@ -58,17 +47,17 @@ export const resendMediaToUsers = async(chatId:number,userList:UserList)=>{
                         const confirmation = confirmationMessage?.text?.toLowerCase();
                 
                         if (confirmation === 'да') {
-                            for (const user of userList.data.clients) {
+                            for (const user of userList) {
                                 try{
                                     if (mediaType === 'фото') {
-                                        await bot.sendPhoto(user.clientName, fileId as string, { caption });
+                                        await bot.sendPhoto(user, fileId as string, { caption });
                                     } else if (mediaType === 'видео') {
-                                        await bot.sendVideo(user.clientName, fileId, { caption });
+                                        await bot.sendVideo(user, fileId, { caption });
                                     } else if (mediaType === 'гиф') {
-                                        await bot.sendAnimation(user.clientName, fileId, { caption });
+                                        await bot.sendAnimation(user, fileId, { caption });
                                     }
                                 } catch(error){
-                                    logger.logError(JSON.stringify(error),user.clientName,["NEWSLETTER_SEND_ERROR"])
+                                    logger.logError(JSON.stringify(error),user,["NEWSLETTER_SEND_ERROR"])
                                 }
                             }
                             await bot.sendMessage(chatId, 'Сообщение успешно отправлено всем пользователям.');
