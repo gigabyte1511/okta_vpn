@@ -9,6 +9,10 @@ export async function createUser(chatId: number) {
     return user;
 }
 
+export async function getAllUsers() {
+    return await User.query();
+}
+
 export async function findOrCreateUser(chatId:number){
     let user = await getUser(chatId);
 	if (!user) {

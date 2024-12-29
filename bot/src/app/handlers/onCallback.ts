@@ -3,7 +3,7 @@ import { Callback, SubscriptionOption } from "../types";
 import { bot, botConfig } from "..";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
-import { findOrCreateUser } from "./controllers/userController";
+import { findOrCreateUser,getAllUsers } from "./controllers/userController";
 import { getLastTransaction } from "./controllers/transactionController";
 import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
 import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
@@ -164,15 +164,11 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				const configsList = await API.getConfigsList();
-
+				const clients = await getAllUsers();
 			
-				if (configsList.success === true) {
-					const userList = Array.from(new Set(
-						configsList.data.clients
-							.map(client => client.clientName.split('-')[0]) // Убираем суффиксы после "-"
-					));
-					await resendMediaToUsers(chatId,userList);
+				if (clients.length > 0) {
+					const clinetIds = clients.map(client => client.id.toString());
+					await resendMediaToUsers(chatId,clinetIds);
 				}
 			}			
 		}
