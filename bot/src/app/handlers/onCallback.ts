@@ -154,7 +154,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 					let sendMessage = "<b>Список пользователей:</b>\n\n\n";
 					for (const user of userList.data.clients){
 						try{
-							const chatId = Number(user.clientName.split("-")[0]);
+							const chatId = Number(user.clientName.split("-")[0]) || 0;
 							const clientInfo = await getUser(chatId);
 
 							sendMessage += `
@@ -166,7 +166,6 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 							`
 						} catch(e){
 							console.log(user.clientName);
-							console.log(e);
 						}
 					}
 					bot.sendMessage(chatId,sendMessage,{parse_mode:'HTML'});
