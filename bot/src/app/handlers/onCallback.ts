@@ -153,16 +153,21 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				if (userList.success === true){
 					let sendMessage = "<b>Список пользователей:</b>\n\n\n";
 					for (const user of userList.data.clients){
-						const chatId = Number(user.clientName.split("-")[0]);
-						const clientInfo = await getUser(chatId);
+						try{
+							const chatId = Number(user.clientName.split("-")[0]);
+							const clientInfo = await getUser(chatId);
 
-						sendMessage += `
-						Имя: ${clientInfo?.name}\n
-						Ссылка: ${clientInfo?.telegramlink}\n
-						Телеграм ID: ${clientInfo?.telegramid}\n
-						VPN ID: ${user.clientName}\n
-						Активность: ${user.valid ? "Действующий" : "Просроченный"}\n\n
-						`
+							sendMessage += `
+							Имя: ${clientInfo?.name}\n
+							Ссылка: ${clientInfo?.telegramlink}\n
+							Телеграм ID: ${clientInfo?.telegramid}\n
+							VPN ID: ${user.clientName}\n
+							Активность: ${user.valid ? "Действующий" : "Просроченный"}\n\n
+							`
+						} catch(e){
+							console.log(user.clientName);
+							console.log(e);
+						}
 					}
 					bot.sendMessage(chatId,sendMessage,{parse_mode:'HTML'});
 				}
