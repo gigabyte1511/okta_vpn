@@ -3,7 +3,7 @@ import { Callback, SubscriptionOption } from "../types";
 import { bot, botConfig } from "..";
 import { renderSubscriptionsList } from "../renders/subscriptionList";
 import { renderSelectedSubscription } from "../renders/selectedSubscription";
-import { findOrCreateUser,getAllUsers } from "./controllers/userController";
+import { findOrCreateUser,getAllUsers, getUser } from "./controllers/userController";
 import { getLastTransaction } from "./controllers/transactionController";
 import { sendPaymentInvoice } from "./payments/common/sendInvoiceToUser";
 import { sendConfigToUserAfterPayment, sendExistConfigToUser } from "./common/vpnConfigSender";
@@ -67,7 +67,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				await findOrCreateUser(chatId);
+				await findOrCreateUser(message);
 
 				const [_callback, subScriptionValue,paymentMethodName] = data.split("/") as [
 					string,
@@ -88,7 +88,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				await findOrCreateUser(chatId);
+				await findOrCreateUser(message);
 
 				const transaction = await getLastTransaction(chatId);
 				if (transaction){
@@ -139,7 +139,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				sendExistConfigToUser(chatId, Number(data.split('/')[1].split('-')[1]));
+				sendExistConfigToUser(message, Number(data.split('/')[1].split('-')[1]));
 				logger.logInfo("get config by button success",chatId,["GET_CONFIG_MENU_SUCCESS"]);
 			}
 
@@ -151,9 +151,18 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 
 				const userList = await API.getConfigsList();
 				if (userList.success === true){
-					let sendMessage = "<b>Список пользователей:</b>\n\n";
+					let sendMessage = "<b>Список пользователей:</b>\n\n\n";
 					for (const user of userList.data.clients){
-						sendMessage+=`<i>- ${user.clientName}: ${user.valid ? "Действующий" : "Просроченный"}</i>\n`;
+						const chatId = Number(user.clientName.split("-")[0]);
+						const clientInfo = await getUser(chatId);
+
+						sendMessage += `
+						Имя: ${clientInfo?.name}\n
+						Ссылка: ${clientInfo?.telegramlink}\n
+						Телеграм ID: ${clientInfo?.telegramid}\n
+						VPN ID: ${user.clientName}\n
+						Активность: ${user.valid ? "Действующий" : "Просроченный"}\n\n
+						`
 					}
 					bot.sendMessage(chatId,sendMessage,{parse_mode:'HTML'});
 				}

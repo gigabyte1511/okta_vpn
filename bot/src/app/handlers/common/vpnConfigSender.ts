@@ -6,6 +6,7 @@ import fs from 'fs/promises'
 import path from 'path';
 import { ConfigsAPIResponse } from "../../api";
 import logger from "../../logs/logger";
+import { Message } from "node-telegram-bot-api";
 
 const sendConfigFromBuffer = async(config:ConfigsAPIResponse, chatId:number)=>{
     
@@ -43,8 +44,10 @@ export async function sendConfigToUserAfterPayment(month:number, chatId:number, 
 
 
 //отправляем существующий, если есть
-export async function sendExistConfigToUser(chatId:number, indexConfigToSend:number){
-    await findOrCreateUser(chatId);
+export async function sendExistConfigToUser(msg:Message, indexConfigToSend:number){
+    const chatId = msg.chat.id;
+    
+    await findOrCreateUser(msg);
     const config = await getUserVpnConfigByID(chatId, Number(indexConfigToSend));
 
     if (config.success === true) {

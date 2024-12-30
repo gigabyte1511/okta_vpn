@@ -7,12 +7,18 @@ class User extends Model {
 
     id!: number;
     transactions?: Transaction[];
+    name?:string;
+    telegramid?: number;
+    telegramlink?: string;
 
     static jsonSchema: JSONSchema = {
         type: "object",
         required: [],
         properties: {
             id: { type: "number" },
+            name: {type: "string"},
+            telegramid: {type: "number"},
+            telegramlink: {type: "string"},
             created_at: { type: "string", format: "date-time" },
         },
     };
