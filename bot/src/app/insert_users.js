@@ -1,8 +1,8 @@
-import TelegramBot from 'node-telegram-bot-api';
-import config from "config";
+const TelegramBot = require('node-telegram-bot-api');
+const config = require("config");
 const botConfig = config.get("bot");
 
-export const bot = new TelegramBot(botConfig.token, { polling: true });
+const bot = new TelegramBot(botConfig.token, { polling: true });
 
 const chatIds = [
   122150105, 125224913, 1325895547, 1454367205,
