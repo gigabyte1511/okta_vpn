@@ -44,10 +44,8 @@ export async function sendConfigToUserAfterPayment(month:number, chatId:number, 
 
 
 //отправляем существующий, если есть
-export async function sendExistConfigToUser(msg:Message, indexConfigToSend:number){
-    const chatId = msg.chat.id;
-    
-    await findOrCreateUser(msg);
+export async function sendExistConfigToUser(chatId:number, indexConfigToSend:number){
+    await findOrCreateUser(chatId);
     const config = await getUserVpnConfigByID(chatId, Number(indexConfigToSend));
 
     if (config.success === true) {

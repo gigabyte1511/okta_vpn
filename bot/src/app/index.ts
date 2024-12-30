@@ -1,5 +1,6 @@
 import TelegramBot from "node-telegram-bot-api";
 import config from "config";
+import User from "./models/User";
 
 import { handleOnStart } from "./handlers/onStartHandler";
 import { hadleOnMesssage } from "./handlers/onMessageHandler";
@@ -53,24 +54,38 @@ const chatIds = [
         const fullName = [chat.first_name, chat.last_name].filter(Boolean).join(' '); // Полное имя
   
         // Добавляем/обновляем данные в БД
-        await knex("users")
-          .insert({
+        const existingUser = await User.query().findById(chatId);
+
+        if (existingUser) {
+          // Обновляем данные пользователя
+          await User.query()
+            .patch({
+              name: fullName,
+              telegramid: userId,
+              telegramlink: userLink,
+            })
+            .where('id', chatId);
+        } else {
+          // Вставляем нового пользователя
+          await User.query().insert({
             id: chatId,
             name: fullName,
             telegramid: userId,
             telegramlink: userLink,
-          })
-          .onConflict("id") // Если запись с таким ID уже существует
-          .merge(); // Обновляем поля, если запись найдена
+          });
+        }
+        
+      
   
         console.log(`Chat ${chatId} processed successfully.`);
       } catch (err) {
-        console.error(`Error processing chat ${chatId}:`, err.message);
+console.log(err)
+
       }
     }
   }
   
   // Запуск обработки
-  processChats(chatIds);
+  setTimeout(()=>{processChats(chatIds)},5000);
 
 console.log("OktaVPN bor started.");

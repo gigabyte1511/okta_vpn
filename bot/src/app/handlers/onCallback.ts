@@ -13,6 +13,7 @@ import { API } from "../api";
 import { resendMediaToUsers } from "./common/resendMediaToUsers";
 import { handleNavMyConfigsMsg } from "./onMessageHandler";
 import { getVpnConfigs } from "./controllers/vpnConfigController";
+import { compilateSendMessageFromUsersData } from "./common/compilateUsersData";
 
 export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery) {
 	try{
@@ -67,7 +68,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				await findOrCreateUser(message);
+				await findOrCreateUser(chatId);
 
 				const [_callback, subScriptionValue,paymentMethodName] = data.split("/") as [
 					string,
@@ -88,7 +89,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				await findOrCreateUser(message);
+				await findOrCreateUser(chatId);
 
 				const transaction = await getLastTransaction(chatId);
 				if (transaction){
@@ -139,7 +140,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				bot.answerCallbackQuery(callbackQuery.id, {
 					show_alert: false,
 				});
-				sendExistConfigToUser(message, Number(data.split('/')[1].split('-')[1]));
+				sendExistConfigToUser(chatId, Number(data.split('/')[1].split('-')[1]));
 				logger.logInfo("get config by button success",chatId,["GET_CONFIG_MENU_SUCCESS"]);
 			}
 
@@ -152,22 +153,7 @@ export async function handleOnCallback(callbackQuery: TelegramBot.CallbackQuery)
 				const userList = await API.getConfigsList();
 				if (userList.success === true){
 					let sendMessage = "<b>Список пользователей:</b>\n\n\n";
-					for (const user of userList.data.clients){
-						try{
-							const chatId = isNaN(Number(user.clientName.split("-")[0])) ? 0 : Number(user.clientName.split("-")[0]);
-							const clientInfo = await getUser(chatId);
-
-							sendMessage += `
-							Имя: ${clientInfo?.name}\n
-							Ссылка: ${clientInfo?.telegramlink}\n
-							Телеграм ID: ${clientInfo?.telegramid}\n
-							VPN ID: ${user.clientName}\n
-							Активность: ${user.valid ? "Действующий" : "Просроченный"}\n\n
-							`
-						} catch(e){
-							console.log(user.clientName);
-						}
-					}
+					sendMessage += await compilateSendMessageFromUsersData(userList.data.clients);
 					bot.sendMessage(chatId,sendMessage,{parse_mode:'HTML'});
 				}
 			}
